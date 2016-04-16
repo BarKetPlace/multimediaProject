@@ -25,9 +25,9 @@ noise = sqrt(varn)*randn(size(x));
 %The observation
 y = x + noise;
 
-%% Mel filter bank (Tiphaine report section C.2.3 - Filter Bank)
+%% Mel filter bank (Tiphanie report section C.2.3 - Filter Bank)
 %Order of the filtering (number of triangles)
-M = 3;
+M = 26;
 
 %Last frequency in mel domain
 LastMelFreq = 2595*log10(1+Fs/2/700);
@@ -92,11 +92,11 @@ for i = 1:M
 end
 
 figure, plot(MelFilter);
-%Make the filter symetric
-symMelFilter = zeros(1,DFTlength);
-symMelFilter(1:round(DFTlength/2+1)) = MelFilter;
-symMelFilter(round(DFTlength/2+1)+1:end) = MelFilter(end:-1:4);
-figure, plot(symMelFilter);
+% %Make the filter symetric
+% symMelFilter = zeros(1,DFTlength);
+% symMelFilter(1:round(DFTlength/2+1)) = MelFilter;
+% symMelFilter(round(DFTlength/2+1)+1:end) = MelFilter(end:-1:4);
+% figure, plot(symMelFilter);
 %% Frame by frame processing
 n = 1;%Begining of a frame
 m = frameLength;%End of a frame
@@ -105,11 +105,11 @@ while (m ~= N)
     yf = y(n:m);
     % DFT
     YF = abs(fft(yf));
-%     YF = abs(YF(1:floor(end/2)));
+    YF = abs(YF(1:round(DFTlength/2)+1));
     
     % Mel filtering
-    FilteredY = symMelFilter*YF;
-    
+    FilteredY = MelFilter.*YF';
+    figure(10), plot(FilteredY);
     
     n = n + frameLength;
     m = min(N, m+frameLength);
