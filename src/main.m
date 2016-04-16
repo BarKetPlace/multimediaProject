@@ -6,17 +6,19 @@ path_db = '../db/';
 filename = 'female44.wav';
 
 [x,Fs] = audioread([path_db,filename]);
-x = x(1:round(end/2));%Part of signal to keep
-N = length(x); %Length of the target signal
-varx = var(x);
+%reduce signal size (to faster the computation)
+x = x(1:round(end/2));
 
-frameLength_time = 30; %Frame length in ms
+N = length(x); %Length of the target signal
+varx = var(x); % variance
+
+frameLength_time = 20; %Frame length in ms
 frameLength = 30/1000*Fs;%Frame length in samples
 
 DFTlength = frameLength;
 %Additive Noise
 % y = x; %Here we do not add noise
-varn = varx/1000;
+varn = varx/100000000;
 %the noise follows N(0,varn)
 noise = sqrt(varn)*randn(size(x));
 
@@ -24,12 +26,15 @@ noise = sqrt(varn)*randn(size(x));
 y = x + noise;
 
 %% Mel filter bank (Tiphaine report section C.2.3 - Filter Bank)
- %Order of the filtering (number of triangles)
-M = 26;
+%Order of the filtering (number of triangles)
+M = 3;
+
 %Last frequency in mel domain
 LastMelFreq = 2595*log10(1+Fs/2/700);
 %Step in mel domain
 delta = LastMelFreq/(M+1);
+%Overlap in Mel domain
+Overlap = 0;%0.1*delta;
 % The three following matrix represents the Mel filter bank of order M
 MelKeyPoints = zeros(3,M);%Mel domain
 FreqKeyPoints= zeros(3,M);%Normal frequency domain
@@ -46,7 +51,7 @@ endPoint = 3;
 MelKeyPoints(:,1) = [0;delta/2;delta];
 %   
 for i=2:M
-    MelKeyPoints(:,i) = [MelKeyPoints(endPoint,i-1);...         %StartPoint
+    MelKeyPoints(:,i) = [MelKeyPoints(endPoint,i-1)-Overlap;...         %StartPoint
                         MelKeyPoints(endPoint,i-1)+delta/2;...  %centerPoint
                         MelKeyPoints(endPoint,i-1)+delta];      %endPoint
 end
@@ -87,6 +92,11 @@ for i = 1:M
 end
 
 figure, plot(MelFilter);
+%Make the filter symetric
+symMelFilter = zeros(1,DFTlength);
+symMelFilter(1:round(DFTlength/2+1)) = MelFilter;
+symMelFilter(round(DFTlength/2+1)+1:end) = MelFilter(end:-1:4);
+figure, plot(symMelFilter);
 %% Frame by frame processing
 n = 1;%Begining of a frame
 m = frameLength;%End of a frame
@@ -94,10 +104,12 @@ m = frameLength;%End of a frame
 while (m ~= N)
     yf = y(n:m);
     % DFT
-    YF = fft(yf);
-    YF = abs(YF(1:floor(end/2)));
+    YF = abs(fft(yf));
+%     YF = abs(YF(1:floor(end/2)));
     
     % Mel filtering
+    FilteredY = symMelFilter*YF;
+    
     
     n = n + frameLength;
     m = min(N, m+frameLength);
