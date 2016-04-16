@@ -10,30 +10,52 @@ x = x(1:round(end/2));%Part of signal to keep
 N = length(x); %Length of the target signal
 varx = var(x);
 
-flen_time = 30; %Frame length in ms
-flen = 30/1000*Fs;%Frame length in samples
+frameLength_time = 30; %Frame length in ms
+frameLength = 30/1000*Fs;%Frame length in samples
 
 
 %Additive Noise
 % y = x; %Here we do not add noise
 varn = varx/1000;
-noise = sqrt(varn)*randn(size(x));
 %the noise follows N(0,varn)
+noise = sqrt(varn)*randn(size(x));
 
-y = x + noise;%Y represents the observation
+%The observation
+y = x + noise;
 
+%% Mel filter bank
+ %Order of the filtering (number of triangles)
+M = 26;
+%Last frequency in mel domain
+LastMelFreq = 2595*log10(1+Fs/2/700);
+%Step in mel domain
+delta = LastMelFreq/(M+1);
+% The three following matrix represents the Mel filter bank of order M
+MelKeyPoints = zeros(3,M);%Mel domain
+FreqKeyPoints= zeros(3,M);%Normal frequency domain
+SamplesKeyPoints= zeros(3,M);%Samples domain
+%First row  : begining of filter
+startPoint = 1;
+%Second row : center
+centerPoint = 2;
+%Third row  : End
+endPoint = 3;
 
+%Computation of the key points
+%Initialisation
+MelKeyPoints(:,1) = [0;delta;delta+delta];
+for i=2:M
+    MelKeyPoints(:,i) = [MelKeyPoints(endPoint,i-1);... %StartPoint
+                        MelKeyPoints(endPoint,i-1)+delta;...%centerPoint
+                        MelKeyPoints(endPoint,i-1)+2*delta];%endPoint
+end
 
-%Frame by frame processing
-n = 1;%Begining of a frame
-m = flen;%End of a frame
-
-% Mel filtering
-f = [1:round(N/2)]*Fs/N;
-MelCoef = 2595*log10(1+f/700);
-MelCoef_samples = round(N*MelCoef/Fs);
-    %Define triangles
+%Define triangles
     
+%% Frame by frame processing
+n = 1;%Begining of a frame
+m = frameLength;%End of a frame
+
 while (m ~= N)
     yf = y(n:m);
     % DFT
@@ -42,6 +64,6 @@ while (m ~= N)
     
     % Mel filtering
     
-    n = n + flen;
-    m = min(N, m+flen);
+    n = n + frameLength;
+    m = min(N, m+frameLength);
 end
