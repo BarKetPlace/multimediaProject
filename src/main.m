@@ -85,9 +85,7 @@ for i = 1:M
 end
 MelFilter = zeros(1,round(DFTlength/2 + 1));
 
-figure,
 for i = 1:M
-    plot(FilterBank(i,:),'-b'); hold on;
     MelFilter = MelFilter + FilterBank(i,:);
 end
 
@@ -109,7 +107,7 @@ while (m ~= N)
     
     % Mel filtering
     FilteredY = MelFilter.*YF';
-    figure(10), plot(FilteredY);
+
     
     n = n + frameLength;
     m = min(N, m+frameLength);
