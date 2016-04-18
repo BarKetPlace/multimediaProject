@@ -34,7 +34,7 @@ LastMelFreq = 2595*log10(1+Fs/2/700);
 %Step in mel domain
 delta = LastMelFreq/(M+1);
 %Overlap in Mel domain
-Overlap = 0;%0.1*delta;
+Overlap = 0;
 % The three following matrix represents the Mel filter bank of order M
 MelKeyPoints = zeros(3,M);%Mel domain
 FreqKeyPoints= zeros(3,M);%Normal frequency domain
@@ -51,7 +51,7 @@ endPoint = 3;
 MelKeyPoints(:,1) = [0;delta/2;delta];
 %   
 for i=2:M
-    MelKeyPoints(:,i) = [MelKeyPoints(endPoint,i-1)-Overlap;...         %StartPoint
+    MelKeyPoints(:,i) = [MelKeyPoints(endPoint,i-1)-Overlap*delta;...%StartPoint
                         MelKeyPoints(endPoint,i-1)+delta/2;...  %centerPoint
                         MelKeyPoints(endPoint,i-1)+delta];      %endPoint
 end
@@ -85,11 +85,23 @@ for i = 1:M
 end
 MelFilter = zeros(1,round(DFTlength/2 + 1));
 
+
 for i = 1:M
     MelFilter = MelFilter + FilterBank(i,:);
 end
 
+%Re-scale filter
+MelFilter = 1/sqrt(sum(MelFilter(:).^2))*MelFilter;
+
+%Plot
 figure, plot(MelFilter);
+% hold on;
+% for k=1:M
+%     plot(FilterBank(k,:),'-r'); hold on;
+% end
+
+xlabel('Samples'); ylabel('Amplitude');
+title(['Mel filter, overlap in Mel domain = ' num2str(Overlap*100) '%']);
 % %Make the filter symetric
 % symMelFilter = zeros(1,DFTlength);
 % symMelFilter(1:round(DFTlength/2+1)) = MelFilter;
