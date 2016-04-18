@@ -11,7 +11,7 @@ x = x(1:round(end/2));
 
 N = length(x); %Length of the target signal
 varx = var(x); % variance
-
+v
 frameLength_time = 20; %Frame length in ms
 frameLength = 30/1000*Fs;%Frame length in samples
 
@@ -39,7 +39,7 @@ Overlap = 0;
 MelKeyPoints = zeros(3,M);%Mel domain
 FreqKeyPoints= zeros(3,M);%Normal frequency domain
 SamplesKeyPoints= zeros(3,M);%Samples domain
-%First row  : begining of filter
+%First row  : begining of triangle
 startPoint = 1;
 %Second row : center
 centerPoint = 2;
@@ -62,6 +62,7 @@ SamplesKeyPoints = round(FreqKeyPoints(:,:) * DFTlength/Fs);
 
 %Compute the coefficient values, stored in FilterBank in the DFT scale
 %domain
+
 FilterBank = zeros(M, round(DFTlength/2 + 1));
 
 %For all filters
@@ -111,16 +112,17 @@ title(['Mel filter, overlap in Mel domain = ' num2str(Overlap*100) '%']);
 n = 1;%Begining of a frame
 m = frameLength;%End of a frame
 
-while (m ~= N)
+while (m ~= DFTlength)
     yf = y(n:m);
     % DFT
-    YF = abs(fft(yf));
-    YF = abs(YF(1:round(DFTlength/2)+1));
+    YF = abs(fft(yf)).^2;
+    
+    PS = YF(1:round(DFTlength/2)+1);
     
     % Mel filtering
-    FilteredY = MelFilter.*YF';
+    FilteredY = MelFilter*PS;
 
     
     n = n + frameLength;
-    m = min(N, m+frameLength);
+    m = min(DFTlength, m+frameLength);
 end
