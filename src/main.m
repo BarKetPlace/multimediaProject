@@ -11,7 +11,7 @@ x = x(1:round(end/2));
 
 N = length(x); %Length of the target signal
 varx = var(x); % variance
-v
+
 frameLength_time = 20; %Frame length in ms
 frameLength = 30/1000*Fs;%Frame length in samples
 
@@ -111,18 +111,31 @@ title(['Mel filter, overlap in Mel domain = ' num2str(Overlap*100) '%']);
 %% Frame by frame processing
 n = 1;%Begining of a frame
 m = frameLength;%End of a frame
-
-while (m ~= DFTlength)
+iframe=1;
+while (m ~= N)
     yf = y(n:m);
     % DFT
     YF = abs(fft(yf)).^2;
     
     PS = YF(1:round(DFTlength/2)+1);
     
-    % Mel filtering
-    FilteredY = MelFilter*PS;
-
+    
+    
+    % Mel filtering, 
+    
+    %For all triangles
+    for i=1:M
+        %Compute the mean of the power spectrum weighted by triangle
+        MFCC(iframe,i) = 1/sum(FilterBank(i,:).^2)*FilterBank(i,:)*PS;
+    end
     
     n = n + frameLength;
-    m = min(DFTlength, m+frameLength);
+    m = min(N, m+frameLength);
+    iframe=iframe + 1;
+end
+
+%% Plot MFCC
+figure,
+for i=1:M
+    plot(MFCC(i,:),'-b'); hold on; pause(1);
 end
