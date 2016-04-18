@@ -28,21 +28,14 @@ y = x + noise;
 %% Mel filter bank (Tiphanie report section C.2.3 - Filter Bank)
 %Order of the filtering (number of triangles)
 M = 26;
+%Overlap between triangles, percentage of step in mel domain (between 0 and 1)
 Overlap = 0;
 
-[ FilterBank ] = MelCepstrumFilterBank(M, Fs, Overlap, DFTlength);
-MelFilter = zeros(1,round(DFTlength/2 + 1));
-
-
-for i = 1:M
-    MelFilter = MelFilter + FilterBank(i,:);
-end
-
-%Re-scale filter
-MelFilter = 1/sqrt(sum(MelFilter(:).^2))*MelFilter;
+[FilterBank] = MelCepstrumFilterBank(M, Fs, Overlap, DFTlength);
 
 %Plot
-figure, plot(MelFilter);
+figure, plot(sum(FilterBank))
+
 % hold on;
 % for k=1:M
 %     plot(FilterBank(k,:),'-r'); hold on;
@@ -76,7 +69,7 @@ while (m ~= N)
     %For all triangles
     for i=1:M
         %Compute the mean of the power spectrum weighted by triangle
-        MFCC(iframe,i) = 1/sum(FilterBank(i,:).^2)*FilterBank(i,:)*PShat;
+        MFCC(iframe,i) = 1/DFTlength*FilterBank(i,:)*PShat;
     end
     
     n = n + frameLength;
