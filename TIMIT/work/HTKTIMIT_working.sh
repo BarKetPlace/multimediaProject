@@ -18,8 +18,8 @@ echo "See http://www.cantabResearch.com/HTKtimit.html"
 # based on the Matlab scipts by Dan Ellis
 
 # you *must* edit this block to reflect your local setup
-TIMIT=/home/sach/HTK/TIMIT
-SAMPLES=/home/sach/HTK/HTK_TIMIT/HTK_TIMIT1/samples
+TIMIT=/home/antoine/projectmultimedia/TIMIT
+SAMPLES=/home/antoine/projectmultimedia/TIMIT
 
 # do all work in this sub directory
 WORK=work`echo $* | tr -d ' '`

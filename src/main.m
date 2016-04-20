@@ -60,18 +60,24 @@ while (m ~= N)
     %Power spectrum PS is approximatly PSx + PSn
     PS = YF(1:round(DFTlength/2)+1);
     
-    %TODO, denoise of PS using EM algorithm
-    
+    %TODO, denoise PS using EM algorithm
+    %...
+    %PShat = ...
     
     PShat = PS;
+    
+    
     
     % Mel filtering, 
     %For all triangles
     for i=1:M
         %Compute the mean of the power spectrum weighted by triangle
-        MFCC(iframe,i) = 1/DFTlength*FilterBank(i,:)*PShat;
+        MFCC_(iframe,i) = 1/DFTlength*FilterBank(i,:)*PShat;
     end
     
+    %DCT
+    MFCC_(iframe,:) = dct(MFCC_(iframe,:));
+    MFCC(iframe,1:13) = MFCC_(iframe,2:14);
     n = n + frameLength;
     m = min(N, m+frameLength);
     iframe=iframe + 1;
@@ -80,5 +86,6 @@ end
 %% Plot MFCC
 figure,
 for i=1:M
-    plot(MFCC(i,:),'-b'); hold on; pause(1);
+    plot((i-1)*13+1:i*13,MFCC(i,:)); hold on;
 end
+title('frame by frame MFCCs');
