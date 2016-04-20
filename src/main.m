@@ -76,7 +76,7 @@ while (m ~= N)
     end
     
     %DCT
-    MFCC_(iframe,:) = dct(MFCC_(iframe,:));
+    MFCC_(iframe,:) = dct(log10(MFCC_(iframe,:)));
     MFCC(iframe,1:13) = MFCC_(iframe,2:14);
     n = n + frameLength;
     m = min(N, m+frameLength);
