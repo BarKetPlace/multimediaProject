@@ -32,7 +32,7 @@ y = initialSound + noise;
 %Order of the filtering (number of triangles)
 M = 26;
 %Overlap between triangles, percentage of step in mel domain (between 0 and 1)
-Overlap = 0.5;
+Overlap = 0;
 
 [FilterBank] = MelCepstrumFilterBank(M, Fs, Overlap, DFTlength);
 
