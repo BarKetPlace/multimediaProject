@@ -8,7 +8,7 @@ LastMelFreq = 2595*log10(1+Fs/2/700);
 %Step in mel domain
 delta = LastMelFreq/(M+1);
 %Overlap in Mel domain
-Overlap = 0;
+
 % The three following matrix represents the Mel filter bank of order M
 MelKeyPoints = zeros(3,M);%Mel domain
 FreqKeyPoints= zeros(3,M);%Normal frequency domain

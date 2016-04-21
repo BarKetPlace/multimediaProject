@@ -32,17 +32,17 @@ y = initialSound + noise;
 %Order of the filtering (number of triangles)
 M = 26;
 %Overlap between triangles, percentage of step in mel domain (between 0 and 1)
-Overlap = 0;
+Overlap = .5;
 
 [FilterBank] = MelCepstrumFilterBank(M, Fs, Overlap, DFTlength);
 
 %Plot
 figure, plot(sum(FilterBank))
 
-% hold on;
-% for k=1:M
-%     plot(FilterBank(k,:),'-r'); hold on;
-% end
+hold on;
+for k=1:M
+    plot(FilterBank(k,:),'-r'); hold on;
+end
 
 xlabel('Samples'); ylabel('Amplitude');
 title(['Mel filter, overlap in Mel domain = ' num2str(Overlap*100) '%']);
