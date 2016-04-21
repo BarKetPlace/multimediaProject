@@ -27,7 +27,12 @@ noise = sqrt(varn)*randn(size(x));
 
 %The observation
 y = initialSound + noise;
+%% Load database
+pathes{1} = '../train_list.txt';
+pathes{2} = '../test_list.txt';
+pathes{3} = '../test_list.txt';
 
+funct_SpeechTimit(pathes);
 %% Mel filter bank (Tiphanie report section C.2.3 - Filter Bank)
 %Order of the filtering (number of triangles)
 M = 26;

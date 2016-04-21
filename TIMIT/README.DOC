@@ -246,11 +246,11 @@ files (.txt, .wrd, .phn) exist.  These associated files have the form:
 
                 TEXT :== <ORTHOGRAPHY> | <WORD_LABEL> | <PHONETIC_LABEL>
                          
+                     PHONETIC_LABEL :== Single phonetic transcription code
                 where,
                 
                      ORTHOGRAPHY :== Complete orthographic text transcription
                      WORD_LABEL :== Single word from the orthography
-                     PHONETIC_LABEL :== Single phonetic transcription code
                                         (See "phoncode.doc" for description 
                                         of codes)
 
