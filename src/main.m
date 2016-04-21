@@ -1,5 +1,5 @@
 clear all
-
+close all
 clc
 
 path_db = '../db/';
@@ -62,8 +62,8 @@ while (m ~= N)
     %Power spectrum PS is approximatly PSx + PSn ?
     PS = YF(1:round(DFTlength/2)+1);
        
-    % Mel filtering, 
-    %For all triangles
+%Mel filtering, 
+%   For all triangles
     for i=1:M
         %Compute the mean of the power spectrum weighted by triangle
         MFCC_tmp(iframe,i) = 1/DFTlength*FilterBank(i,:)*PS;
@@ -77,6 +77,7 @@ while (m ~= N)
     %DCT
     MFCC_tmp(iframe,:) = dct(log10(MFCC_tmp(iframe,:)));
     MFCC(iframe,1:13) = MFCC_tmp(iframe,2:14);
+    
     n = n + frameLength;
     m = min(N, m+frameLength);
     iframe=iframe + 1;
