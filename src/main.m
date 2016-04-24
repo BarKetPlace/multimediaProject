@@ -33,9 +33,9 @@ outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/';
 filename = [outputFolder 'raw_MatlabMFCC_train.ark'];
 writekaldifeatures(dataTrainMFCC,filename);
 %% Process testing data
-fprintf('Loading Testing data ...\n');
+fprintf('Loading Testing data... ');
 load dataTest.mat;
-fprintf('\bDone.\n');
+fprintf('Done.\n');
 fprintf('MFCC Extraction... ');
 MFCCcell = getMFCC(dataTest);%extract MFCCs
 fprintf('Done.\n');
