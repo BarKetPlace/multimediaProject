@@ -6,9 +6,9 @@ clear all
 %% Load databases 
 if (system('test -f dataTrain.mat')) %If file doesnot exists
     system('./listfiles.sh');%Create the list of files, should be modified according to system architecture
-    pathes{1} = 'train_list.txt';%List of training files
-    pathes{2} = 'test_list.txt';%List of testing files
-    pathes{3} = 'test_list.txt';%List of dev files
+    pathes{1} = 'data_train.list';%List of training files
+    pathes{2} = 'data_test.list';%List of testing files
+    pathes{3} = 'data_dev.list';%List of dev files
     fprintf('Preparation of TIMIT database... ');
     funct_SpeechTimit(pathes);%Three .mat files are saved in the current folder
     fprintf('Done.\n');
@@ -31,6 +31,7 @@ save('dataTrainMFCC.mat','dataTrainMFCC','-v7.3');
 % Convert to kaldi format
 outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/';
 filename = [outputFolder 'raw_MatlabMFCC_train.ark'];
+
 writekaldifeatures(dataTrainMFCC,filename);
 %% Process testing data
 fprintf('Loading Testing data... ');
@@ -66,5 +67,5 @@ dataDevMFCC.feature = MFCCcell;
 save('dataDevMFCC.mat','dataDevMFCC','-v7.3');
 % Convert to kaldi format
 outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/';
-filename = [outputFolder 'raw_MatlabMFCC_Dev.ark'];
+filename = [outputFolder 'raw_MatlabMFCC_dev.ark'];
 writekaldifeatures(dataDevMFCC,filename);

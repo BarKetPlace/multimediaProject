@@ -1,4 +1,4 @@
-function [dataTrain,dataTest, dataDev] = funct_SpeechTimit(pathes,opt)
+function [] = funct_SpeechTimit(pathes,opt)
 % Go build a structure of raw speech signals to be used in the remainder of the system
 % Inputs :
 %
@@ -41,11 +41,12 @@ i = i + 1;
 % counter
 % Name of utterance (for Kaldi tool)
 C = strsplit(tlineTrain,{'/','.'}) ;
+lenC = length(C);
 % dataTrain.utt{i} = [C{9} ' ' C{10} ' ' C{11} ' ' C{12}] ;
 % Name with train drX is blocking in Kaldi
 % Trial without it:
-% dataTrain.utt{i} = [C{11} ' ' C{12}] ;
-dataTrain.utt{i} = tlineTrain;
+dataTrain.utt{i} = [C{lenC-2} '_' C{lenC-1}] ;
+% dataTrain.utt{i} = tlineTrain;
 % Read Timit
 y =readsph(tlineTrain,'s',-1);
 % Add to structure
@@ -54,6 +55,8 @@ dataTrain.rawSpeech{i} = y' ;
 % Update line
 tlineTrain = fgetl(fidTrain);
 end
+save('dataTrain.mat','dataTrain','-v7.3') ;
+clear dataTrain
 %% TESTING : Framing
 i = 0;
 % counter
@@ -66,7 +69,8 @@ C = strsplit(tlineTest,{'/','.'}) ;
 % Name with train drX is blocking in Kaldi
 % Trial without it:
 % dataTest.utt{i} = [C{11} ' ' C{12}] ;
-dataTest.utt{i} = tlineTest;
+dataTest.utt{i} = [C{lenC-2} '_' C{lenC-1}] ;
+% dataTest.utt{i} = tlineTest;
 % Read Timit
 y =readsph(tlineTest,'s',-1);
 % Add to structure
@@ -87,7 +91,8 @@ C = strsplit(tlineDev,{'/','.'}) ;
 % Name with train drX is blocking in Kaldi
 % Trial without it:
 % dataDev.utt{i} = [C{11} ' ' C{12}] ;
-dataDev.utt{i} = tlineDev;
+dataDev.utt{i} = [C{lenC-2} '_' C{lenC-1}] ;
+% dataDev.utt{i} = tlineDev;
 % Read Timit
 y =readsph(tlineDev,'s',-1);
 % Add to structure
@@ -97,7 +102,7 @@ dataDev.rawSpeech{i} = y' ;
 tlineDev = fgetl(fidDev);
 end
 %% SAVING DATA
-save('dataTrain.mat','dataTrain','-v7.3') ;
+
 save('dataTest.mat','dataTest','-v7.3') ;
 save('dataDev.mat','dataDev','-v7.3') ;
 fclose(fidTrain) ;
