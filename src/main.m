@@ -1,6 +1,4 @@
-% clear all
-close all
-clc
+
 clear all
 
 %% Load databases 

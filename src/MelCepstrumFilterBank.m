@@ -1,4 +1,4 @@
-function [ FilterBank ] = MelCepstrumFilterBank(M, Fs, Overlap, DFTlength)
+function [ FilterBank ] = MelCepstrumFilterBank(Fs, Overlap, DFTlength)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 M = 26;
