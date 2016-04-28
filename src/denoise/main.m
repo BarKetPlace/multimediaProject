@@ -49,17 +49,17 @@ D = Dfull(:,1:1000);
 %%
 close all
 
-for delta = 4:10:size(B,2)
+for delta = 1:9:size(B,2)
     figure(delta),
-zhat = B(:,I+delta);
-Eyhat = D*zhat;
-%%Plot res
-
-subplot(121); 
+    zhat = B(:,I+delta-1);
+    Eyhat = D*zhat;
+    %%Plot res
+    
+    subplot(121);
     plot(zhat);
-   title({'Lambda'; num2str(FitInfo.Lambda(I+delta))});
-subplot(122);
+    title({'Lambda'; num2str(FitInfo.Lambda(I+delta))});
+    subplot(122);
     plot(ex); hold on;
     plot(Eyhat);
-title({'MSE'; num2str(FitInfo.MSE(I+delta))});
+    title({'MSE'; num2str(FitInfo.MSE(I+delta))});
 end
