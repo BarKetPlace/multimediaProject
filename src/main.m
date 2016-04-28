@@ -2,7 +2,7 @@
 clear all
 
 %% Load databases 
-if (system('test -f dataTrain.mat')) %If file doesnot exists
+if (system('test -f dataTrain.mat')) %If file doesnot exist
     system('./listfiles.sh');%Create the list of files, should be modified according to system architecture
     pathes{1} = 'data_train.list';%List of training files
     pathes{2} = 'data_test.list';%List of testing files
