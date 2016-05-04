@@ -3,9 +3,15 @@ clear all
 % db = '/home/antoine/Documents/multimediaProject/TIMIT/';
 % filename = 'TRAIN/DR1/FCJF0/SI1657.WAV';
 % [y, Fs] = audioread([db filename]);
+if system('test -f Dfull.mat') 
 load ../dataTrain.mat;
 Dfull = getDictionnary(dataTrain);
+save('Dfull.mat','Dfull');
 clear dataTrain
+else
+load Dfull.mat
+end
+
 %%
 
 load ../dataTest.mat
@@ -21,7 +27,6 @@ DFTlength = frameLength;
 [y] = dataTest.rawSpeech{1,1};
 SigLength = length(y); %Length of the target signal
 %%
-
 %%Frame by frame processing
 %     MFCC = zeros(nframe, 13);
 Ey = [];
@@ -38,28 +43,80 @@ while (m ~= SigLength)
     iframe=iframe + 1;
 end
 
-%%
 
-ex = Ey(:,1);
+%%
+%Randomly choose a frame to try
+ey = Ey(:,ceil(size(Ey,2)*rand));
+
 %restrain dic
-D = Dfull(:,1:1000);
+dsize = 1024;
+D = Dfull(:,1:dsize);
 
-[B,FitInfo] = lasso(D,ex);
+%%Lasso (Sparsity constrain)
+[B, FitInfo] = lasso(D,ey);
 [~, I] = min(FitInfo.MSE);
-%%
-close all
 
-for delta = 1:9:size(B,2)
-    figure(delta),
-    zhat = B(:,I+delta-1);
-    Eyhat = D*zhat;
-    %%Plot res
+
+zhat_lasso=zeros(dsize,size(B,2));
+eyhat_lasso=zeros(26,size(B,2));
+MSE_lasso=zeros(1,size(B,2));
+l0_lasso=zeros(1,size(B,2));
+for ilambda = 1:size(B,2)
     
-    subplot(121);
-    plot(zhat);
-    title({'Lambda'; num2str(FitInfo.Lambda(I+delta))});
-    subplot(122);
-    plot(ex); hold on;
-    plot(Eyhat);
-    title({'MSE'; num2str(FitInfo.MSE(I+delta))});
+    zhat_lasso(:,ilambda) = B(:,ilambda);
+    eyhat_lasso(:,ilambda) = D*zhat_lasso(:,ilambda);
+    tmp = eyhat_lasso(:,ilambda)<=0;
+    if any(tmp)
+        eyhat_lasso(:,ilambda) = eyhat_lasso(:,ilambda) + abs(min(eyhat_lasso(:,ilambda))); 
+    end
+    MSE_lasso(ilambda) = sum((ey(:)-eyhat_lasso(:,ilambda)).^2);
+    l0_lasso(ilambda) = sum(zhat_lasso(:,ilambda)==0);
 end
+
+%%Least square (Inequality)
+
+C=D;d=ey;A=-D;b=zeros(1,26);
+[zhat_lsq_tmp,resnorm,residual,exitflag,output,lambda] = lsqlin(C,d,A,b);
+
+
+tot = sum(zhat_lsq_tmp.^2);
+[~,tmp] = sort(zhat_lsq_tmp.^2);
+perc=[floor(zhat_lsq_tmp(tmp(end)).^2/tot*100)];
+zhat_lsq = zeros(dsize,length(zhat_lsq_tmp));
+
+eyhat_lsq = zeros(26,length(zhat_lsq_tmp));
+MSE_lsq = zeros(1,length(zhat_lsq_tmp));
+l0_lsq = zeros(1,length(zhat_lsq_tmp));
+for index=1:length(zhat_lsq_tmp)%Try several energy
+
+    %Find the perc% 
+%     index=0;
+%     while sum(zhat_lsq_tmp(tmp(end-index:end)).^2)<=perc(index)/100*tot
+%         index=index+1;
+%     end
+
+    zhat_lsq(tmp(length(zhat_lsq_tmp)-index+1:end),index)=zhat_lsq_tmp(tmp(length(zhat_lsq_tmp)-index+1:end));
+    eyhat_lsq(:,index) = D*zhat_lsq(:,index);
+    MSE_lsq(index) = sum((ey(:)-eyhat_lsq(:,index)).^2);
+    l0_lsq(index) = sum(zhat_lsq(:,index)==0);
+end
+%%PLOTS
+% close all
+figure(1), clf
+plot(l0_lsq/dsize,MSE_lsq); hold on;
+plot(l0_lasso/dsize,MSE_lasso);
+
+xlabel('Sparsity (percentage of coef = 0 in zhat)');
+ylabel('MSE');
+legend('Least square','Lasso');
+
+nplot=50;
+figure(2), clf
+plot(ey,'LineWidth',2); hold on;
+% plot(D*zhat_lsq_tmp); hold on;
+plot(eyhat_lsq(:, nplot)); hold on;
+plot(eyhat_lasso(:, nplot));
+legend('Target',...
+    ['LSQ algorithm, MSE:: ' num2str(MSE_lsq(nplot)) ' Sparsity:: ' num2str(floor(l0_lsq(nplot)/dsize*100))],...
+    ['LASSO algorithm, MSE:: ' num2str(MSE_lasso(nplot)) ' Sparsity:: ' num2str(floor(l0_lasso(nplot)/dsize*100))]...
+    );
