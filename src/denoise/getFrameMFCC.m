@@ -1,6 +1,9 @@
 function [Ey, MFCC] = getFrameMFCC(frame,FilterBank)
-%function [MFCC] = getFrameMFCC(frame,FilterBank)
-
+%function [Ey, MFCC] = getFrameMFCC(frame,FilterBank)
+%IN :: frame        -> waveform frame to process
+%      FilterBank   -> Mel cepstrum filter bank
+%OUT:: Ey           -> MFCC before log and DCT (used to denoise)
+%      MFCC         -> Common MFCCs
 
     % DFT
     [M, DFTlength] = size(FilterBank);
@@ -17,7 +20,7 @@ function [Ey, MFCC] = getFrameMFCC(frame,FilterBank)
     end
     
     
-    %TODO, denoise MFCC_tmp using EM algorithm
+    %TODO, denoise MFCC_tmp
     %...
     %MFCC_hat = ...
     
