@@ -26,6 +26,7 @@ DFTlength = frameLength;
 [FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);
 [y] = dataTest.rawSpeech{1,1};
 SigLength = length(y); %Length of the target signal
+
 %%Frame by frame processing
 %     MFCC = zeros(nframe, 13);
 Ey = [];
