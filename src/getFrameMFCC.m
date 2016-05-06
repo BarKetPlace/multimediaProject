@@ -4,9 +4,9 @@ function [MFCC] = getFrameMFCC(frame,FilterBank)
 
     % DFT
     [M, DFTlength] = size(FilterBank);
-    YF = abs(fft(frame)).^2;
+    YF = abs(fft(frame));
     MFCC_tmp = zeros(1,M);
-    %Power spectrum PS is approximatly PSx + PSn ?
+    %Power spectrum PS is approximatly PSx + PSn 
     PS = YF(1:round(DFTlength));
        
 %Mel filtering, 
@@ -22,7 +22,7 @@ function [MFCC] = getFrameMFCC(frame,FilterBank)
     %MFCC_hat = ...
     
     %DCT
-    MFCC = dct(log10(MFCC_tmp));
-    MFCC = MFCC(2:14);
+    MFCC = dct(log(MFCC_tmp));
+    MFCC = MFCC(1:13);
 end
 

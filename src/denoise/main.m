@@ -24,7 +24,7 @@ frameLength = frameLength_time/1000*Fs;%Frame length in samples
 DFTlength = frameLength;
 
 [FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);
-[y] = dataTest.rawSpeech{1,1};
+[y] = dataTest.rawSpeech{1,100};
 SigLength = length(y); %Length of the target signal
 
 %%Frame by frame processing
@@ -42,7 +42,12 @@ while (m ~= SigLength)
     m = min(SigLength, m+frameLength);
     iframe=iframe + 1;
 end
-
+%% 
+close all
+zhat=[];
+epsilon = .001;
+for iframe = 1:10
+clear zhat
 %Randomly choose a frame to try
 ey = Ey(:,ceil((size(Ey,2))*rand));
 
@@ -51,13 +56,30 @@ iDictio=5;
 load Codebooks.mat;
 D=Codebooks{1,iDictio};
 dsize = size(D,2);
-[zhat] = getzhat(D,ey);
+M = size(D,1);
+lambda=.01;
 
+cvx_begin
+    variable zhat(dsize)
+    minimize( norm( D * zhat - ey, 2 ) + lambda*norm( zhat, 1 )  )
+    subject to
+        D * zhat >= 0
+cvx_end
 
-figure(1), clf;
+% figure(iframe), stem(zhat)
+figure(iframe), clf;
+subplot(121)
 plot(ey,'LineWidth',2); hold on; plot(D*zhat);
 title(['Sparsity ' num2str(round(sum(zhat~=0)/dsize*100)) '%']);
 legend('Target','Estimated');
+subplot(122)
+    stem(zhat);
+end
+%%
+% [zhat] = getzhat(D,ey);
+
+
+
 % %% Lasso (Sparsity constrain)
 % [B, FitInfo] = lasso(D,ey);
 % [~, I] = min(FitInfo.MSE);
