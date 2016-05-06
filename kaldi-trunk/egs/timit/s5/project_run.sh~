@@ -11,20 +11,37 @@
 # then re-mapping to 39 phonemes for scoring:
 # http://repository.cmu.edu/cgi/viewcontent.cgi?article=2768&context=compsci
 #
-START=$(date) #Timer
-#Customize these variables
+START=$(date)
+#Customize these 2 variables considering your architecture
 timit=/home/antoine/Documents/multimediaProject/TIMIT
 matlabcode=/home/antoine/Documents/multimediaProject/src/
+##########################################################
+kaldi_s5=`pwd`
+
+
 
 comment="Clean testing data" #if no option specified, use the clean data
-training_mfcc=true
-snr=-1 #Default
+training_mfcc=true #By default, extract the MFCC from training data and train the hmm
+snr=-1 #Default, no noise on the testing data
 
 . parse_options.sh || exit 1;
 
+#Create the list of train, test and dev files. Store into data_[...].list in $matlabcode
 
+cd $matlabcode; ./listfiles.sh $timit $kaldi_s5; cd $kaldi_s5;
+
+#If the files dataTrain.mat, dataTest.mat and dataDev.mat do not exist in the matlab folder, run the following matlab script
+echo "Load databases in files"
+matlab -nojvm -nodesktop -r "cd('$matlabcode');\
+				loadDB('data_train.list');\
+				loadDB('data_test.list');\
+				loadDB('data_dev.list');\
+				quit;\
+				"
 if [ $snr != -1 ];then
 	comment="Noisy data, snr= $snr"
+	#create the noisy data
+	matlab -nojvm -nodesktop -r "cd('$matlabcode'); makenoise('$snr'); quit;"
 fi
 
 
@@ -50,16 +67,7 @@ decode_nj=10
 echo ============================================================================
 echo "                Data & Lexicon & Language Preparation                     "
 echo ============================================================================
-
-#timit=/export/corpora5/LDC/LDC93S1/timit/TIMIT # @JHU
-timit=/home/antoine/Documents/multimediaProject/TIMIT
-#timit=/mnt/matylda2/data/TIMIT/timit # @BUT
-
-
-
-
 local/timit_data_prep.sh $timit || exit 1
-
 local/timit_prepare_dict.sh
 
 # Caution below: we remove optional silence by setting "--sil-prob 0.0",
@@ -69,18 +77,7 @@ utils/prepare_lang.sh --sil-prob 0.0 --position-dependent-phones false --num-sil
 
 local/timit_format_data.sh
 
-#If the files 'data_train.list', 'data_test.list' and 'data_dev.list' do not exist, run the command bellow:
-#./listfile.sh
-
-#If the files dataTrain.mat, dataTest.mat and dataDev.mat do not exist in the matlab folder, run the following matlab script
-
-#echo "Load databases in files"
-#matlab -nojvm -nodesktop -r "cd('$matlabcode');\
-#				loadDB('data_train.list');\
-#				loadDB('data_test.list');\
-#				loadDB('data_dev.list');\
-#				quit;\
-#			    "
+			    
 
 mfccdir=MatlabMFCC
 

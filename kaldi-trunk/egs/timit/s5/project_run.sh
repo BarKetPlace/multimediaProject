@@ -12,10 +12,12 @@
 # http://repository.cmu.edu/cgi/viewcontent.cgi?article=2768&context=compsci
 #
 START=$(date)
-#Customize these 2 variables
+#Customize these 2 variables considering your architecture
 timit=/home/antoine/Documents/multimediaProject/TIMIT
 matlabcode=/home/antoine/Documents/multimediaProject/src/
 ##########################################################
+kaldi_s5=`pwd`
+
 
 
 comment="Clean testing data" #if no option specified, use the clean data
@@ -25,7 +27,8 @@ snr=-1 #Default, no noise on the testing data
 . parse_options.sh || exit 1;
 
 #Create the list of train, test and dev files. Store into data_[...].list in $matlabcode
-./listfile.sh $timit `pwd`
+
+cd $matlabcode; ./listfiles.sh $timit $kaldi_s5; cd $kaldi_s5;
 
 #If the files dataTrain.mat, dataTest.mat and dataDev.mat do not exist in the matlab folder, run the following matlab script
 echo "Load databases in files"
