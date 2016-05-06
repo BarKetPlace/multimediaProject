@@ -10,14 +10,27 @@
 # Hon and Lee paper on TIMIT, 1988, introduces mapping to 48 training phonemes, 
 # then re-mapping to 39 phonemes for scoring:
 # http://repository.cmu.edu/cgi/viewcontent.cgi?article=2768&context=compsci
+
+
+
+#To run this script, go into the kaldi/egs/timit/s5 directory
 #
+#Usage: Simplest: ./project_run.sh
+#Using options:   ./project_run.sh --training_mfcc true(default)/false --snr 5 or 10 or 15
+#
+#The variable training_mfcc is used to skip :
+#	the mfcc features extraction of the training data;
+#	The training of the HMMs
+#
+#The variable snr is used to specify the SNR in dB of the test data. If you want to run kaldi on
+#the clean data, just omit the option --snr
+
 START=$(date)
-#Customize these 2 variables considering your architecture
+#Customize these 2 variables
 timit=/home/antoine/Documents/multimediaProject/TIMIT
 matlabcode=/home/antoine/Documents/multimediaProject/src/
 ##########################################################
 kaldi_s5=`pwd`
-
 
 
 comment="Clean testing data" #if no option specified, use the clean data
