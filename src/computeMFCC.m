@@ -1,7 +1,13 @@
 function computeMFCC(data_filename,snr,denoise_flag)
 %function computeMFCC(data_filename,snr)
 %Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/dataTestNoisy5/10/15dB",snr)
-%Put a snr value only for noisy computation
+%INPUT: data_filename   is the name of the datafile to process
+%       snr             is the SNR of the noisy signal we want to process(put -1 if you want to process the clean data)
+%       denoise_flag    indicates wether you want to use the denoising
+%       algorithm or not
+%OUTOUT: none
+
+
 if nargin < 3
     denoise_flag=0;
 end

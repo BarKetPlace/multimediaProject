@@ -2,7 +2,7 @@ function [] = loadDB(listfile_path, opt)
 %function [] = loadDB(listfile_path, opt)
 %   Usage: loadDB("data_train.list"/"data_test.list"/"data_dev.list")
 %     to create "data_train.list","data_test.list" and "data_dev.list"
-%     call./listfiles.sh
+%     call ./listfiles.sh (from the matlab folder)
 
 
 if strcmp(listfile_path,'data_train.list')
