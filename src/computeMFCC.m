@@ -1,8 +1,10 @@
-function computeMFCC(data_filename,snr)
+function computeMFCC(data_filename,snr,denoise_flag)
 %function computeMFCC(data_filename,snr)
 %Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/dataTestNoisy5/10/15dB",snr)
 %Put a snr value only for noisy computation
-
+if nargin < 3
+    denoise_flag=0;
+end
 %We put the ark files into the kaldi folder
 outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/';
 
@@ -32,8 +34,13 @@ if ~system(['test -f ' data_filename 'MFCC.mat']) %If file exists
     system(['rm ' data_filename 'MFCC.mat']);%Remove it
 end
 load([data_filename '.mat']);%Load data
-fprintf('MFCC Extraction...');
-MFCCcell = getMFCC(DATA);%extract MFCCs
+if denoise_flag
+    fprintf([data_filename ' MFCC Extraction & denoising...']);
+else 
+    fprintf([data_filename ' MFCC Extraction...']);
+end
+
+MFCCcell = getMFCC(DATA,denoise_flag);%extract MFCCs
 fprintf('done.\n');
 %dataTrain is very heavy so we create a copy containing only the utterance name
 %and the MFCCs

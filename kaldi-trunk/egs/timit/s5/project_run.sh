@@ -36,10 +36,12 @@ kaldi_s5=`pwd`
 comment="Clean testing data" #if no option specified, use the clean data
 training_mfcc=true #By default, extract the MFCC from training data and train the hmm
 snr=-1 #Default, no noise on the testing data
+denoise=0
 
 . parse_options.sh || exit 1;
 
 #Create the list of train, test and dev files. Store into data_[...].list in $matlabcode
+if ! [ -f $matlabcode/dataTrain.mat ];then
 
 cd $matlabcode; ./listfiles.sh $timit $kaldi_s5; cd $kaldi_s5;
 
@@ -51,13 +53,17 @@ matlab -nojvm -nodesktop -r "cd('$matlabcode');\
 				loadDB('data_dev.list');\
 				quit;\
 				"
+fi
+
 if [ $snr != -1 ];then
 	comment="Noisy data, snr= $snr"
 	#create the noisy data
-	matlab -nojvm -nodesktop -r "cd('$matlabcode'); makenoise('$snr'); quit;"
+	matlab -nojvm -nodesktop -r "cd('$matlabcode'); makenoise($snr); quit;"
 fi
 
-
+if [ $denoise == 1 ]; then
+	comment=$comment" with denoising"
+fi
 . ./cmd.sh 
 [ -f path.sh ] && . ./path.sh
 set -e
@@ -129,7 +135,7 @@ x=test
 
 #   steps/make_mfcc.sh --cmd "$train_cmd" --nj $feats_nj data/$x exp/make_mfcc/$x $mfccdir
 #Compute MFCC for the testing batch
-matlab -nojvm -nodesktop -r "cd('$matlabcode'); computeMFCC('dataTest',$snr); quit;"
+matlab -nojvm -nodesktop -r "cd('$matlabcode'); computeMFCC('dataTest',$snr,$denoise); quit;"
 
 #prepare folders for kaldi requirements
 sort "$mfccdir"/raw_${mfccdir}_$x.scp > data/feats.scp
