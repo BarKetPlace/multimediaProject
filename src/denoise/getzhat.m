@@ -7,19 +7,18 @@ function [zhat] = getzhat(D,ey)
 
 [M dsize]=size(D);
 
-cvx_begin;
+cvx_begin quiet;
     variable zhat(dsize);
     minimize( norm( D * zhat - ey, 2 ) );
+%     minimize( norm(zhat,1) )
     subject to
         D * zhat >= eps;
-        norm( zhat, 1 ) <= 10^9
+         norm(zhat,1)<=10^8
+%         card(zhat)<=.5*M;
+%         norm(zhat, 1) <= 10^8*.5;
 cvx_end;
 
-figure(1), clf;
-    subplot(121);
-    plot(ey,'LineWidth',2); hold on; plot(D*zhat);
-    subplot(122);
-    stem(zhat);
+
 end
 
 

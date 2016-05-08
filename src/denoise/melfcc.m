@@ -78,8 +78,18 @@ end
 if ~isempty(D)
    for iframe = 1:size(aspectrum,2)
        ey = aspectrum(:,iframe); %ey = ex + en
-       eyhat = D*getzhat(D,ey);
+       zhat = getzhat(D,ey);
+       eyhat = D*zhat;
+       
+%     figure(1), clf;
+%     subplot(121);
+%     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
+%     subplot(122);
+%     stem(zhat);
+    aspectrum(:,iframe)=eyhat;
    end
+   
+
 end
 
 
