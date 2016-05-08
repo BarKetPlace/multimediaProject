@@ -1,4 +1,4 @@
-function [cepstra,aspectrum,pspectrum] = melfcc(samples, sr,denoise_flag, varargin)
+function [cepstra,aspectrum,pspectrum] = melfcc(samples, sr,D, varargin)
 %[cepstra,aspectrum,pspectrum] = melfcc(samples, sr[, opts ...])
 %  Calculate Mel-frequency cepstral coefficients by:
 %   - take the absolute value of the STFT
@@ -24,6 +24,7 @@ function [cepstra,aspectrum,pspectrum] = melfcc(samples, sr,denoise_flag, vararg
 %    'modelorder'  (0): if > 0, fit a PLP model of this order
 %    'broaden'     (0): flag to retain the (useless?) first and last bands
 %    'useenergy'   (0): overwrite C0 with true log energy
+
 % The following non-default values nearly duplicate Malcolm Slaney's mfcc
 % (i.e. melfcc(d,16000,opts...) =~= log(10)*2*mfcc(d*(2^17),16000) )
 %       'wintime': 0.016
@@ -73,10 +74,12 @@ if (usecmp)
   aspectrum = postaud(aspectrum, maxfreq, fbtype, broaden);
 end
 
-%%%%%Denoise aspectrum
-if denoise_flag
-   
-    
+%%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
+if ~isempty(D)
+   for iframe = 1:size(aspectrum,2)
+       ey = aspectrum(:,iframe); %ey = ex + en
+       eyhat = D*getzhat(D,ey);
+   end
 end
 
 

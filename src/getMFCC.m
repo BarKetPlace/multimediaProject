@@ -1,15 +1,15 @@
 function [MFCCcell] = getMFCC(DATA,denoise_flag)
 %% Mel filter bank (Tiphanie report section C.2.3 - Filter Bank)
 
-%Overlap between triangles, percentage of step in mel domain (between 0 and 1)
-Overlap = .5;
-Fs = 16000;
-
-frameLength_time = 25; %Frame length in ms
-frameLength = frameLength_time/1000*Fs;%Frame length in samples
-DFTlength = frameLength;
-[FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);
-
+% %Overlap between triangles, percentage of step in mel domain (between 0 and 1)
+% Overlap = .5;
+% Fs = 16000;
+% 
+% frameLength_time = 25; %Frame length in ms
+% frameLength = frameLength_time/1000*Fs;%Frame length in samples
+% DFTlength = frameLength;
+% [FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);
+% 
 
 NbFiles = length(DATA.utt);
 % fprintf('MFCC Extraction:     \n');
