@@ -43,6 +43,9 @@ DATA.utt{i} = [C{lenC-2} '_' C{lenC-1}] ;
 % dataTrain.utt{i} = tlineTrain;
 % Read Timit
 y =readsph(tlineBatch,'s',-1);
+%Conditioning
+    y=y-mean(y);
+    y=y/max(abs(y));
 % Add to structure
 DATA.rawSpeech{i} = y' ;
 % raw speech in row vector

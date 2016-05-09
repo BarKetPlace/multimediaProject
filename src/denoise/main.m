@@ -11,7 +11,45 @@ clear all
 % else
 % load Dfull.mat
 % end
+load dataTestNoisy5dB.mat
+isignal = 10;
+Fs = 16000;
+noisy_sig = DATA.rawSpeech{1,isignal};
+load dataTest.mat
+clean_sig = DATA.rawSpeech{1,isignal}';
+clear DATA
+load Codebooks; 
+D = Codebooks{1,6};
+D=[];
 
+[cepstra_noisy,aspectrum_noisy,pspectrum_noisy] = melfcc(noisy_sig, Fs, D,...
+        'lifterexp',0,...
+        'nbands', 26,...
+        'preemph',0,...
+        'sumpower',0);
+    
+[cepstra_clean,aspectrum_clean,pspectrum_clean] = melfcc(clean_sig, Fs, D,...
+        'lifterexp',0,...
+        'nbands', 26,...
+        'preemph',0,...
+        'sumpower',0);
+
+iframe=1;
+figure(1), clf
+    plot(aspectrum_clean(:,iframe)); hold on;
+    plot(aspectrum_noisy(:,iframe));
+    legend('clean', 'noisy');
+    title('MFCC before dct(log(...))');
+figure(2), clf
+    plot(clean_sig,'LineWidth',2); hold on;
+    plot(noisy_sig);
+    legend('clean', 'noisy');
+    title('Signals');
+figure(3), clf
+    plot(abs(fft(clean_sig)),'LineWidth',2); hold on;
+    plot(abs(fft(noisy_sig)));
+    legend('clean', 'noisy');
+    title('Approx. power spectrum abs(fft(...))');
 %%
 
 load ../dataTest.mat

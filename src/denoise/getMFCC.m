@@ -15,13 +15,12 @@ D=[];
 %Load Dictionnary in case of denoising
 if denoise_flag
     load Codebooks.mat
-    D = Codebooks{1,6}; %We arbitrarly choose a dictionary of size 128
+    D = Codebooks{1,5}; %We arbitrarly choose a dictionary
 end
 
 NbFiles = length(DATA.utt);
-% fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles
-%     fprintf('\b\b\b\b%02d%%\n',floor(ifile/NbFiles*100));
+     fprintf('%d\n',ifile);
     initialSound = DATA.rawSpeech{1,ifile};
 
     y = initialSound;
@@ -40,8 +39,7 @@ for ifile = 1:NbFiles
         'lifterexp',0,...
         'nbands', 26,...
         'preemph',0,...
-        'sumpower',0,...
-        'fbtype','fcmel');
+        'sumpower',0);
 %     while (m ~= SigLength)
 %         yf = y(n:m);
 %        

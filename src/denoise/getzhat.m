@@ -4,20 +4,30 @@ function [zhat] = getzhat(D,ey)
 %       ey      -> Observation
 %OUT::  zhat   -> estimate coefficients.
 %The actual estimate of y is D*zhat
-
+numiter=1;
 [M dsize]=size(D);
-
-cvx_begin quiet;
-    variable zhat(dsize);
-    minimize( norm( D * zhat - ey, 2 ) );
-%     minimize( norm(zhat,1) )
+W = ones(dsize,1); % initial weights
+delta= 10^-5;
+lambda=.001;
+for k=1:numiter
+    
+cvx_begin quiet
+    variable zhat(dsize)
+    
+    minimize( norm( D * zhat - ey, 2 ) + lambda*norm( zhat, 1 ) )
     subject to
-        D * zhat >= eps;
-         norm(zhat,1)<=10^8
-%         card(zhat)<=.5*M;
-%         norm(zhat, 1) <= 10^8*.5;
-cvx_end;
+        D * zhat >= eps
+cvx_end
 
+
+%   W = 1./(delta + abs(zhat));
+%       figure(1), clf;
+%     subplot(121);
+%     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
+%     subplot(122);
+%     stem(zhat);
+%     title(['nzz:: ' num2str(length(find( abs(zhat) > delta )))]);
+end
 
 end
 

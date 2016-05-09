@@ -76,17 +76,21 @@ end
 
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
+
    for iframe = 1:size(aspectrum,2)
+       fprintf('iframe:: %d\n',iframe);
        ey = aspectrum(:,iframe); %ey = ex + en
        zhat = getzhat(D,ey);
-       eyhat = D*zhat;
+       aspectrum(:,iframe) = D*zhat;
        
+%     figure(1), clf
+%         plot(ey,'LineWidth',2); hold on; plot(aspectrum(:,iframe))
 %     figure(1), clf;
 %     subplot(121);
 %     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
 %     subplot(122);
 %     stem(zhat);
-    aspectrum(:,iframe)=eyhat;
+     
    end
    
 
