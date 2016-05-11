@@ -76,7 +76,6 @@ end
 
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
-
    for iframe = 1:size(aspectrum,2)
 %        fprintf('iframe:: %d\n',iframe);
        ey = aspectrum(:,iframe); %ey = ex + en
@@ -92,10 +91,7 @@ if ~isempty(D)
 %     stem(zhat);
      
    end
-   
-
 end
-
 
 
 if modelorder > 0

@@ -35,6 +35,7 @@ D=[];
         'preemph',0,...
         'maxfreq',8000);
 M=size(aspectrumx,1);
+
 %%Normalization of the mfcc
 % aspectrumx=aspectrumx-ones(M,1)*mean(aspectrumx);
 % aspectrumx=aspectrumx./(ones(M,1)*max(abs(aspectrumx)));
