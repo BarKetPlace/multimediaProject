@@ -1,6 +1,8 @@
 #!/bin/bash
-timit=$1; #/home/antoine/Documents/multimediaProject/TIMIT;
-kaldi_egs=$2; #/home/antoine/kaldi-trunk/egs/timit/s5;
+timit=/home/antoine/Documents/multimediaProject/TIMIT;
+kaldi_egs=/home/antoine/kaldi-trunk/egs/timit/s5;
+
+
 
 #training data list
 find $timit/TRAIN -type f -iname *.WAV > train_list.txt

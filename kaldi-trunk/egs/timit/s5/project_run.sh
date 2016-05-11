@@ -16,16 +16,17 @@
 #To run this script, go into the kaldi/egs/timit/s5 directory
 #
 #Usage: Simplest: ./project_run.sh
-#Using options:   ./project_run.sh --training_mfcc true(default)/false --snr 5 or 10 or 15
+#Using options:   ./project_run.sh --training true(default)/false --snr 5 or 10 or 15
 #
-#The variable training_mfcc is used to skip :
+#The variable training is used to skip :
 #	the mfcc features extraction of the training data;
 #	The training of the HMMs
 #
 #The variable snr is used to specify the SNR in dB of the test data. If you want to run kaldi on
 #the clean data, just omit the option --snr
 
-START=$(date)
+start=`date +%s` #Starting Time
+startday=`date +%c` #Starting date
 #Customize these 2 variables
 timit=/home/antoine/Documents/multimediaProject/TIMIT
 matlabcode=/home/antoine/Documents/multimediaProject/src/
@@ -34,9 +35,9 @@ kaldi_s5=`pwd`
 
 
 comment="Clean testing data" #if no option specified, use the clean data
-training_mfcc=true #By default, extract the MFCC from training data and train the hmm
+training=true #By default, extract the MFCC from training data and train the hmm
 snr=-1 #Default, no noise on the testing data
-denoise=0
+denoise=false
 
 . parse_options.sh || exit 1;
 
@@ -61,8 +62,10 @@ if [ $snr != -1 ];then
 	matlab -nojvm -nodesktop -r "cd('$matlabcode'); makenoise($snr); quit;"
 fi
 
-if [ $denoise == 1 ]; then
+if [ $denoise == true ]; then
 	comment=$comment" with denoising"
+else
+	comment=$comment" without denoising"
 fi
 . ./cmd.sh 
 [ -f path.sh ] && . ./path.sh
@@ -100,7 +103,7 @@ local/timit_format_data.sh
 
 mfccdir=MatlabMFCC
 
-if [ ${training_mfcc} == true ]; then
+if [ ${training} == true ]; then
 echo ============================================================================
 echo "         Training data MFCC Feature Extration                             "
 echo ============================================================================
@@ -148,7 +151,7 @@ utils/validate_data_dir.sh data/$x/
 
 
 echo ============================================================================
-echo "                     mono Phone Training & Decoding                        "
+echo "                     mono Phone Decoding                        "
 echo ============================================================================
 
 
@@ -317,13 +320,14 @@ steps/decode.sh --nj "$decode_nj" --cmd "$decode_cmd" \
 echo ============================================================================
 echo "                    Getting Results [see RESULTS file]                    "
 echo ============================================================================
+stop=`date +%s` #End time
+secs=`expr $stop - $start` #Elapsed time
 
-#bash RESULTS dev
-echo >> RESULTS
-echo "========= Comments: " $comment>> RESULTS
-echo ================"Started at " $START======================================== >> RESULTS
-bash RESULTS test >> RESULTS
-bash RESULTS test
-echo ================"Finished successfully at " `date` ==========================>> RESULTS
+echo >> RESULTS #Skip a line in file 
+echo "============================ Comments: " $comment>> RESULTS 
+echo "Started on $startday "========================================================== >> RESULTS
+bash RESULTS test >> RESULTS #Write in file
+bash RESULTS test # write in command line
+echo "===========================Finished in `printf '%dh:%dm:%ds\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))`=================================" >> RESULTS
 
 exit 0

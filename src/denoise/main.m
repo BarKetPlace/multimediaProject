@@ -14,26 +14,58 @@ clear all
 load dataTestNoisy5dB.mat
 isignal = 10;
 Fs = 16000;
-noisy_sig = DATA.rawSpeech{1,isignal};
+y = DATA.rawSpeech{1,isignal};
 load dataTest.mat
-clean_sig = DATA.rawSpeech{1,isignal}';
+x = DATA.rawSpeech{1,isignal}';
 clear DATA
 load Codebooks; 
 D = Codebooks{1,6};
 D=[];
 
-[cepstra_noisy,aspectrum_noisy,pspectrum_noisy] = melfcc(noisy_sig, Fs, D,...
+M=13;
+framelen_sec=.025;%seconds
+frameLengthSamples = framelen_sec*Fs;
+
+
+[FB, startFreq, centreFreq, endingFreq] = funct_Filterbanks(M,Fs,frameLengthSamples);
+
+
+x=x';
+SigLength=length(x);
+n = 1;%Begining of a frame
+m = frameLengthSamples;%End of a frame
+iframe=1;
+nframes=ceil(length(x)/frameLengthSamples);
+frames=zeros(nframes,frameLengthSamples);
+while (m ~= SigLength)
+    xf = x(n:m);
+    %MFCC extraction
+    frames(iframe,:) = xf;
+    
+    n = n + frameLengthSamples;
+    m = min(SigLength, m+frameLengthSamples);
+    iframe=iframe + 1;
+end
+HamWin = hamming(frameLengthSamples)';
+dct_matrix = dctmtx(M);
+[mfccout] = funct_GetMfcc(frames, FB, HamWin, dct_matrix);
+
+[cepstra_clean,aspectrum_clean,pspectrum_clean] = melfcc(x, Fs, D,...
+        'lifterexp',0,...
+        'nbands', 26,...
+        'preemph',0,...
+        'sumpower',0,'maxfreq',8000,'hoptime',0);
+figure(1), clf
+    plot(mfccout(:,2)); hold on; 
+    plot(cepstra_clean(:,2));
+    legend('Tiphanie s code','Used code');
+    %%
+[cepstra_noisy,aspectrum_noisy,pspectrum_noisy] = melfcc(y, Fs, D,...
         'lifterexp',0,...
         'nbands', 26,...
         'preemph',0,...
         'sumpower',0);
     
-[cepstra_clean,aspectrum_clean,pspectrum_clean] = melfcc(clean_sig, Fs, D,...
-        'lifterexp',0,...
-        'nbands', 26,...
-        'preemph',0,...
-        'sumpower',0);
-
 iframe=1;
 figure(1), clf
     plot(aspectrum_clean(:,iframe)); hold on;
@@ -41,13 +73,13 @@ figure(1), clf
     legend('clean', 'noisy');
     title('MFCC before dct(log(...))');
 figure(2), clf
-    plot(clean_sig,'LineWidth',2); hold on;
-    plot(noisy_sig);
+    plot(x,'LineWidth',2); hold on;
+    plot(y);
     legend('clean', 'noisy');
     title('Signals');
 figure(3), clf
-    plot(abs(fft(clean_sig)),'LineWidth',2); hold on;
-    plot(abs(fft(noisy_sig)));
+    plot(abs(fft(x)),'LineWidth',2); hold on;
+    plot(abs(fft(y)));
     legend('clean', 'noisy');
     title('Approx. power spectrum abs(fft(...))');
 %%

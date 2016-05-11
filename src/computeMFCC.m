@@ -1,6 +1,6 @@
 function computeMFCC(data_filename,snr,denoise_flag)
-%function computeMFCC(data_filename,snr)
-%Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/dataTestNoisy5/10/15dB",snr)
+%function computeMFCC(data_filename,snr,denoise_flag)
+%Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/,snr,denoiseflag")
 %INPUT: data_filename   is the name of the datafile to process
 %       snr             is the SNR of the noisy signal we want to process(put -1 if you want to process the clean data)
 %       denoise_flag    indicates wether you want to use the denoising
@@ -29,7 +29,7 @@ elseif (strcmp(data_filename,'dataDev'))%Compute MFCC on dev datas
     
 
 else
-    fprintf('Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/dataTestNoisy5/10/15dB")\n');
+    fprintf('Usage :: computeMFCC("dataTrain"/"dataTest"/"dataDev/,snr,denoiseflag")\n');
     return;
 end
     

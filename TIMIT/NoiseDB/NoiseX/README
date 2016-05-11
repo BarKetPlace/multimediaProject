@@ -1,0 +1,14 @@
+This file contains some noise samples from NOISE X database. These are downloaded from Rice University DSP Site
+ http://spib.rice.edu/spib/select_noise.html
+
+The file specification is as follows:
+
+sampling rate: 19.98 KHz
+A/D: 16 bit
+pre-filter: anti-aliasing filter
+pre-emphasis: none
+
+
+(1) m109.wav -> Tank noise
+
+Other noises are clear from the name of the corresponding file.

@@ -11,10 +11,18 @@ function [MFCCcell] = getMFCC(DATA,denoise_flag)
 % [FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);
 % 
 
+D=[];
+
+%Load Dictionnary in case of denoising
+if denoise_flag
+    load Codebooks.mat
+    D = Codebooks{1,5}; %We arbitrarly choose a dictionary
+end
+
 NbFiles = length(DATA.utt);
-% fprintf('MFCC Extraction:     \n');
+%  fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles
-%     fprintf('\b\b\b\b%02d%%\n',floor(ifile/NbFiles*100));
+%     fprintf('file %d/NbFiles\n',ifile,NbFiles);
     initialSound = DATA.rawSpeech{1,ifile};
 
     y = initialSound;
@@ -28,12 +36,12 @@ for ifile = 1:NbFiles
 %     n = 1;%Begining of a frame
 %     m = frameLength;%End of a frame
 %     iframe=1;
-    [cepstra,aspectrum,pspectrum] = melfcc(y,Fs,denoise_flag,...
+    [cepstra,aspectrum,pspectrum] = melfcc(y,Fs,D,...
         'lifterexp',0,...
         'nbands', 26,...
         'preemph',0,...
-        'sumpower',0,...
-        'fbtype','fcmel');
+        'sumpower',1,...
+        'maxfreq',8000);
 %     while (m ~= SigLength)
 %         yf = y(n:m);
 %        
