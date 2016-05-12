@@ -3,7 +3,7 @@ cd /home/antoine/Documents/multimediaProject/src/signalprocessing
 
 %% 
 isignal= 56;
-SNR=1;
+SNR=5;
 noise_path = '/home/antoine/Documents/multimediaProject/TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,18 +47,12 @@ snr_mel_energy(iframe)= 10*log10(var(Ex)/var(En));
 timewindow=round(1+(iframe-1)*framelen*Fs:min(length(x),iframe*framelen*Fs));
 snr_time(iframe)=10*log10(var(x(timewindow))/var(n(timewindow)));
 end
-figure(2), clf
-plot(snr_mel_energy); hold on;
-plot(snr_time);
-legend('mel energy domain','time domain');
-title('Frame by frame SNR');
-xlabel('Frame number');
-ylabel('SNRdB');
+
  
 %%
 
 iframe=round( (nbframe-1)*(rand()) ) +1;
-% iframe=24;
+iframe=33;
 Ey= aspectrumy(:,iframe);
 Ex= aspectrumx(:,iframe);
 En= aspectrumn(:,iframe);
@@ -80,10 +74,19 @@ plot(Ex+En,'LineWidth',2); hold on
 plot(Ex); hold on;
 plot(En);
 legend('Ey','Ex+En','Ex','En');
+xlabel('Mel space coefficent');
+ylabel('Value f coefficient');
 title({['mel SNR, 10log10(var(Ex)/var(En)):: ' num2str(snr_mel_energy(iframe))];...
         ['time SNR, 10log10(var(xframe)/var(nframe)):: ' num2str(snr_time(iframe))]});
 
+figure(2), clf
+plot(snr_mel_energy); hold on;
+plot(snr_time);
 
+legend('mel energy domain','time domain');
+title('Frame by frame SNR');
+xlabel('Frame number');
+ylabel('SNRdB');
 
 
 figure(3), clf
@@ -91,7 +94,7 @@ plot(logPy); hold on;
 plot(iframe*[1 1], [min(logPy) max(logPy)]);hold on;
 % plot([1 nbframe], threshold*[1 1]);
 xlabel('Frame number');
-ylabel('sum(abs(X(f))).^2');
+ylabel('sum(abs(X(f))^2)');
 title('Power of each frame');
 
 energy_snr=[snr_mel_energy;logPy];
