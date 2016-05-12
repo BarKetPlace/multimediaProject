@@ -52,13 +52,13 @@ clc
 load ../Dictionnary.mat
 
     % initialize parameters
-bits = 2:8 ;
+bits = 8:-1:6 ;
 Codebooks = cell(1, length(bits)) ;
 
     % compute codebooks from clustering of Dictionnary
 for i = 1 : length(bits)        
     [~, Cb] = kmeans(Dict', 2^(bits(i))) ;          % call built-in kmeans function
-    Codebooks(1, i) =  {Cb'} ;                        % store result in cell        
+    Codebooks(1, i) =  {Cb'} ;  % store result in cell        
 end
     
     % save result
