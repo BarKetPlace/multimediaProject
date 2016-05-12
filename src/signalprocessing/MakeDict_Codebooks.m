@@ -1,71 +1,70 @@
 %% Build dictionnaries from feature vectors before log and DCT
-clear all
+close all
+clc
+
     % Load training data
 load ../dataTrain.mat
-DATA = dataTrain ;
-clear dataTrain;
-    % Overlap between triangles, percentage of step in mel domain (between 0 and 1)
-Overlap = .5 ;
-Fs = 16000 ;
 
-frameLength_time = 30 ;                  % Frame length in ms
-frameLength = frameLength_time/1000*Fs ; % Frame length in samples
-DFTlength = frameLength ;
-[FilterBank] = MelCepstrumFilterBank(Fs, Overlap, DFTlength);   % Create filterbank
-[M, ~] = size(FilterBank) ;
-NbFiles = length(DATA.utt) ;                                    % Get number of wav files
+    % set parameters
+Fs = 16000 ;                                     % Sampling frequency of data
+NbFiles = length(DATA.utt) ;                     % Get number of wav files
+iter = 1 ;                                       % iteration in Dict
+energythresh = 0.2 ;                             % threshold for speech/silence decision
 
     % Set dictionnary size
-Numcol = 470747 ;
+Numcol = 382622 ;                       
+M = 26 ;
 Dict = zeros(M, Numcol) ;               % column size computed on already computed MFCC structures (MUST INCLUDE ALGORITHM
-                                        % IF CHANGE ON DATA SET!!)
-k = 1 ;                                 % initialize number of column        
-
+                                        % IF CHANGE ON DATA SET!!)                       
+          
 for ifile = 1:NbFiles       % For all wav files in data
 
-        % Get speech signal and properties
+        % Get speech signal
     y = DATA.rawSpeech{1,ifile} ;
     y=y(:) ;                            % Put it in one single column
-    SigLength = length(y);              % Get length
-    varx = var(y);                      % Get Variance
     
-        % Frame by frame processing of signal
-    MFCC = [] ;
-    n = 1 ;                      % Begining of a frame
-    m = frameLength ;            % End of a frame
-    iframe = 1 ;                 % Number of frame
+        % get mel features
+    cd ../
+    [~, mel_e, mel_p] = melfcc(y, Fs, []) ;
+    cd signalprocessing/
     
-    while (m ~= SigLength)       % Processes each frame
-%         fprintf('Processing frame %d of signal %d/4620 | column %d/%d of dictionnary', iframe, ifile, k, Numcol) ;
+        % get energy per frame
+    mel_p = sum(mel_p) ;
+    
+        % isolate filter bank energies that correspond to speech signal
+    a = mel_p > energythresh * ones(1, length(mel_p)) ;
+    fbe_speech = mel_e(:, a) ;
+    
+        % store them in dictionnary
+    Dict(:, iter:iter+length(fbe_speech)-1) = fbe_speech ;
+    
+    iter = iter + length(fbe_speech) ;
         
-            % Get frame of signal
-        yf = y(n:m);
-        
-        [Ey, ~] = getFrameMFCC(yf,FilterBank);
-        Dict(:,k) = Ey';
-%         
-%             % Compute Power spectrum
-%         [M, DFTlength] = size(FilterBank);
-%         YF = abs(fft(yf)).^2 ;               % absolute value of DFT
-%         PS = YF(1:round(DFTlength)) ;
-% 
-%             %Mel filtering, 
-%             %   For all triangles
-%         for i=1:M
-%             %Compute the mean of the power spectrum weighted by triangle
-%             Dict(i, k) = 1/DFTlength*FilterBank(i,:)*PS;
-%         end
-%         
-        
-            % Update loop variables
-        n = n + frameLength;
-        m = min(SigLength, m+frameLength);
-        iframe=iframe + 1;
-        k = k + 1 ;
-    end
 end
 
-%% Build k-means algorithm
+save('../Dictionnary.mat', 'Dict') ;
+
+%% Build codebooks using kmeans algorithm
+close all
+clc
+
+    % load data
+load ../Dictionnary.mat
+
+    % initialize parameters
+bits = 2:8 ;
+Codebooks = cell(1, length(bits)) ;
+
+    % compute codebooks from clustering of Dictionnary
+for i = 1 : length(bits)        
+    [~, Cb] = kmeans(Dict', 2^(bits(i))) ;          % call built-in kmeans function
+    Codebooks(1, i) =  {Cb'} ;                        % store result in cell        
+end
+    
+    % save result
+save('../Codebooks.mat', 'Codebooks') ;
+
+%% Compare project k-means function and built-in function
 close all
 clc
 
@@ -79,38 +78,11 @@ DATA = randn(row, column) ;         % uniformly distributed
     % number of cluster
 num_clust = 64 ;
 
-    % number of iteration
-Nb_iter = 100 ;
-
+    % run project function
 tic
-        %%% FUNCTION %%%
-    % 1) Initialization of centroids.
-    % METHOD : choose randomly within the data (Forgy method)
-C = DATA(:, randperm(column, num_clust)) ;          % get num_clust unique indices from all the possible indices
-
-DATAmat = repmat(DATA, [1 1 num_clust]) ;           % initialize DATAmat matrix which will be used to compute distance
-DATAmat = permute(DATAmat, [1 3 2]) ;               % permute dimension so that matrices fit
-
-for j = 1 : Nb_iter
-    % 2) For each point in the DATA, find indice of nearest centroid using euclidian
-    % distance
-Cmat = repmat(C, [1 1 column]) ;                    % add dimension to matrix to compute everything without for loop
-
-dist = squeeze(sum((Cmat - DATAmat).^2)) ;          % compute euclidian distance between each point and each centroids
-
-idxs = repmat(min(dist), [num_clust 1]) ;           % get the indice of the nearest centroid for each point
-idxs = (1:num_clust) * (dist == idxs) ;             %
-
-    % 3) Update the centroid of each cluster by computing the mean of all
-    % the points contained in each cluster
-for i = 1 : num_clust
-   x = DATA(repmat(idxs == i, [row 1])) ;           % get all the points in cluster i
-   x = reshape(x, [row length(x)/row]) ;            %
-   
-   C(:, i) = mean(x, 2) ;                           % computes the mean and stores it in centroid vector
-end
-end
+[idxs, C] = kmeans_project(DATA, num_clust) ;
 toc
+
     % compare with matlab algorithm
 tic
 [idxs_matlab, C_matlab] = kmeans(DATA', num_clust) ;
@@ -124,27 +96,3 @@ hold on
 plot(C(1, :), C(2, :), 'x') ;
 plot(C_matlab(1, :), C_matlab(2, :), '+') ;
 legend('DATA', 'Own clustering', 'Matlab clustering') ;
-
-%% Build codebooks using kmeans algorithm
-close all
-clc
-
-    % load data
-% load FeatDict.mat
-
-    % initialize parameters
-bits = 2:8 ;
-Codebooks = cell(1, length(bits)) ;
-
-    % compute codebooks from clustering of Dictionnary
-for i = 1 : length(bits)        
-    [~, Cb] = kmeans(Dict', 2^(bits(i))) ;          % call built-in kmeans function
-    Codebooks(1, i) =  {Cb'} ;                        % store result in cell        
-end
-
-
-
-
-
-
-
