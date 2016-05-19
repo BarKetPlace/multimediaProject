@@ -12,7 +12,7 @@ if nargin < 3
     denoise_flag=0;
 end
 %We put the ark files into the kaldi folder
-outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/kksjhadkjshd/';
+outputFolder = '/home/antoine/kaldi-trunk/egs/timit/s5/MatlabMFCC/';
 
 if (strcmp(data_filename,'dataTrain'))%Compute MFCC on training datas
     ark_filename = [outputFolder 'raw_MatlabMFCC_train.ark'];

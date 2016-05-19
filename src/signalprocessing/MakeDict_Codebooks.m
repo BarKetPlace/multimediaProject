@@ -52,7 +52,7 @@ clc
 load ../Dictionnary.mat
 
     % initialize parameters
-bits = 8:-1:6 ;
+bits = 8:-1:5 ;
 Codebooks = cell(1, length(bits)) ;
 
     % compute codebooks from clustering of Dictionnary
