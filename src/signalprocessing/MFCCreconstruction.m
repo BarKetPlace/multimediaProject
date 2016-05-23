@@ -4,7 +4,7 @@ clc
 % cd /home/antoine/Documents/multimediaProject/src/signalprocessing
 
 
-isignal= 74;
+isignal= 235;
 SNR=5;
 noise_path = '../../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
@@ -43,6 +43,7 @@ y= x;
 
 clear Noise
 fprintf('MFCC extraction...');
+
 cd ..
 %Extract mfcc
 [cepstrax,Ex,pspectrumx] = melfcc(x, Fs, [],'useenergy',1);
@@ -50,28 +51,27 @@ cd ..
 [cepstran,En_model,pspectrumn] = melfcc(n, Fs, [],'useenergy',1);
 cd signalprocessing
 fprintf('done.\n');
-%extract Speech frame
+
+%Compute power of each frame
 mel_p = sum(pspectrumx) ;
 
-% isolate filter bank energies that correspond to speech signal
-energythresh = 20 ;                             % threshold for speech/silence decision
+% % isolate filter bank energies that correspond to speech signal
+energythresh = .2;                             % threshold for speech/silence decision
 
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
 Ex= Ex(:,a);
 Ey= Ey(:,a);
 En_model= En_model(:,a);
-% 
+% %Actual noise on the features
+En= Ey- Ex;
+
 nbframe=size(Ex,2);
 
-
-%Actual noise on the features
-En= Ey- Ex;
 %% Find the boundary epsilon
-framelen=.025;
 SNRtarget=25;%dB
-
-[Exhat, epsilon_tab, PrincipalCompNb, zhatstorage]= ...
-                                    getEpsilon(nbframes,Ex, SNRtarget, D)
+ 
+[Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
+                                    getEpsilon(nbframe,Ex, SNRtarget, D);
 
 err_ratio=  norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 %     err_ratio_1(ilambda)=var(Ex(:)-Exhat_1(:))/var(En(:));
