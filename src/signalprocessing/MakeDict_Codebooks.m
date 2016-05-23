@@ -25,7 +25,7 @@ for ifile = 1:NbFiles       % For all wav files in data
     
         % get mel features
     cd ../
-    [~, mel_e, mel_p] = melfcc(y, Fs, []) ;
+    [~, mel_e, mel_p] = melfcc(y, Fs, [], 'useenergy', 1) ;
     cd signalprocessing/
     
         % get energy per frame
@@ -39,9 +39,13 @@ for ifile = 1:NbFiles       % For all wav files in data
     Dict(:, iter:iter+length(fbe_speech)-1) = fbe_speech ;
     
     iter = iter + length(fbe_speech) ;
-        
 end
 
+    % normalize data
+[Dict, Dict_par] = mapstd(Dict) ;
+Dict = struct('mean', Dict_par.xmean, 'std', Dict_par.xstd, 'dictionnary', Dict) ;
+
+    % save
 save('../Dictionnary.mat', 'Dict') ;
 
 %% Build codebooks using kmeans algorithm
@@ -58,7 +62,7 @@ Codebooks = cell(1, length(bits)) ;
     % compute codebooks from clustering of Dictionnary
 for i = 1 : length(bits)        
     [~, Cb] = kmeans(Dict', 2^(bits(i))) ;          % call built-in kmeans function
-    Codebooks(1, i) =  {Cb'} ;  % store result in cell        
+    Codebooks(1, i) =  {Cb'} ;                      % store result in cell        
 end
     
     % save result

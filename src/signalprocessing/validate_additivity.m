@@ -1,22 +1,22 @@
 clear all
-cd /home/antoine/Documents/multimediaProject/src/signalprocessing
+% cd /home/antoine/Documents/multimediaProject/src/signalprocessing
 
 
 isignal= 73;
 SNR=5;
-noise_path = '/home/antoine/Documents/multimediaProject/TIMIT/NoiseDB/NoiseX_16kHz/';
+noise_path = '../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Choose data
-load ../dataTest.mat
+% load dataTest.mat
 x = DATA.rawSpeech{1,isignal};
 
-clear DATA
+% clear DATA
 %Choose codebook
-load ../Codebooks
-D=Codebooks{1,2};%
-clear Codebook;
+% load ../Codebooks
+% D=Codebooks{1,2};%
+% clear Codebook;
 
 
 [M, dsize]=size(D);
