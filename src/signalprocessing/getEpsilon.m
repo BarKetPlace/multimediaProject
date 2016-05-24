@@ -1,6 +1,10 @@
 function [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage, SNR_Reconst ]= ...
                                 getEpsilon(nbframe,Ex, SNRtarget, D)
 
+                            
+
+
+                            
 fprintf('   \n');
 for iframe = 1:nbframe
     fprintf('\b\b\b\b%02d%%\n',round(100*iframe/nbframe));

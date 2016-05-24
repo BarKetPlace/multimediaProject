@@ -4,7 +4,7 @@ clc
 % cd /home/antoine/Documents/multimediaProject/src/signalprocessing
 
 
-isignal= 235;
+isignal= 238;
 SNR=5;
 noise_path = '../../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
@@ -40,8 +40,9 @@ varn= (var(x)) / (10^(SNR/10));
 n = (varn^(.5))*UVnoise_sig;
 %Noisy signal
 y= x;
-
 clear Noise
+
+%% MFCC extraction
 fprintf('MFCC extraction...');
 
 cd ..
@@ -54,9 +55,9 @@ fprintf('done.\n');
 
 %Compute power of each frame
 mel_p = sum(pspectrumx) ;
-
+% figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
-energythresh = .2;                             % threshold for speech/silence decision
+energythresh = 100;                             % threshold for speech/silence decision
 
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
 Ex= Ex(:,a);
@@ -68,33 +69,64 @@ En= Ey- Ex;
 nbframe=size(Ex,2);
 
 %% Find the boundary epsilon
-SNRtarget=25;%dB
- 
-[Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
-                                    getEpsilon(nbframe,Ex, SNRtarget, D);
+SNRtarget=20;%dB
+%We want epsilon such that ||Ex-Exhat||_2<= epsilon  ->
+%||Ex||_2/||Ex-Exhat||_2 >= 20dB
 
-err_ratio=  norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
+epsilon= mean( sum(Ex.^2)/10^(SNRtarget/10) );
+% [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
+%                                     getEpsilon(nbframe,Ex, SNRtarget, D);
+sigSNR=0;
+zhat= zeros(dsize, nbframe);
+while (sigSNR<=SNRtarget)
+    epsilon=epsilon/2;
+    cvx_begin quiet
+        variables zhat_tmp(dsize,nbframe)
+        minimize( max( sum( abs(zhat_tmp) ) ) )
+        subject to
+            D*zhat_tmp >= eps
+            max( sum( (Ex - D*zhat_tmp).^2) )<= epsilon
+    cvx_end
+    
+    if strcmp(cvx_status,'Solved')
+        zhat=zhat_tmp;
+        sigSNR=mean( 10*log10( sum(Ex.^2)./sum((Ex-D*zhat).^2) ) )
+    else
+        warning('Problem %s\n',cvx_status);
+        break;
+    end
+    
+end
+Exhat=D*zhat;
+
+PrincipalCompNb=zeros(M,nbframe);
+for iframe = 1:nbframe
+    [~, ~, PrincipalCompNb(:,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
+end
+
+err_ratio= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 %     err_ratio_1(ilambda)=var(Ex(:)-Exhat_1(:))/var(En(:));
     
 %     ilambda=ilambda+1;
 
 
 %Compute snr
-snr_mel_energy= 10*log10(sum(Ex.^2)./sum(En.^2));
-snr_mel_energy_model=10*log10(sum(Ex.^2)./sum(En_model.^2));
-snr_denoise = 10*log10(sum(Ex.^2)./sum((Ex-Exhat).^2));
+% snr_mel_energy= 10*log10(sum(Ex.^2)./sum(En.^2));
+% snr_mel_energy_model=10*log10(sum(Ex.^2)./sum(En_model.^2));
+% snr_denoise = 10*log10(sum(Ex.^2)./sum((Ex-Exhat).^2));
 
-logPy=exp(cepstray(1,:));
+% logPy=exp(cepstray(1,:));
 % logPx=logPx+abs(min(logPx));
 % fprintf('Overall sparsity= %02d%%\n',round(100*sum(zhatstorage(:)==0)/length(zhatstorage(:))));
-%% PLOTS
+
+
+%%PLOTS
 ifig=1;
+plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
+[snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
 
-plotMFCC(ifig,Ex,Ey,Exhat);ifig=ifig+1;
-plotSNR(ifig,Ex,Exhat,En);ifig=ifig+1;
-
-figure, histogram(PrincipalCompNb);
-
+figure, histogram(PrincipalCompNb)%,round(nbframe/2));
+title({'Number of components representing .95% of energy in zhat vector over the frames';['epsilon= ' num2str(epsilon)]});
 % figure(ifig); clf; ifig=ifig+1;
 % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
 % stem(zhatstorage(:));

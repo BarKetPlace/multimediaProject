@@ -1,5 +1,5 @@
 function [vector_, index,nbprincipal ] = getPrincipalComp(vector, energyperc)
-%function [ lowdim_index ] = getPrincipal(nbprincipal,zhat)
+%[vector_, index,nbprincipal ] = getPrincipalComp(vector, energyperc)
 %   INPUT
 %       vector:        line or column  
 %       energyperc:    percentage of energy 

@@ -82,6 +82,7 @@ if ~isempty(D)
 %        fprintf('iframe:: %d\n',iframe);
        ey = aspectrum(:,iframe); %ey = ex + en
        zhat = getzhat(D,ey);
+       
        aspectrum(:,iframe) = D*zhat;
        
 %     figure(1), clf
