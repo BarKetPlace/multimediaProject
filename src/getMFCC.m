@@ -16,16 +16,16 @@ D=[];
 %Load Dictionnary in case of denoising
 if denoise_flag
     load Codebooks.mat
-    D = Codebooks{1,5}; %We arbitrarly choose a dictionary
+    D = Codebooks{1,2}; %We arbitrarly choose a dictionary
 end
 
 NbFiles = length(DATA.utt);
 %  fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles
-%     fprintf('file %d/NbFiles\n',ifile,NbFiles);
-    initialSound = DATA.rawSpeech{1,ifile};
+    fprintf('%02d%%\n',round(100*ifile/NbFiles));
+    x = DATA.rawSpeech{1,ifile};
 
-    y = initialSound;
+    y = x;
     y=y(:);%No noise
 %     SigLength = length(y); %Length of the target signal
 %     stdSig = std(y); % variance

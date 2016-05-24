@@ -9,12 +9,19 @@ SNR=5;
 noise_path = '../../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[Noise, Fs] = audioread([noise_path noise_file]);
+% %extract the right noise length
+% noise_sig = Noise(1:length(x))';
+% %Uniformization of noise
+% UVnoise_sig = noise_sig/std(noise_sig);
+% UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
+% %future variance of noise depending on SNR
+% varn= (var(x)) / (10^(SNR/10));
+% %Amplification of noise
+% n = (varn^(.5))*UVnoise_sig;
+% n=0;
+% clear Noise
 
-%Choose data
- load ../dataTrain.mat
-x = DATA.rawSpeech{1,isignal};
-
-clear DATA
 % Choose codebook
 load ../Codebooks
 D=Codebooks{1,2};%
@@ -23,25 +30,20 @@ clear Codebooks;
 
 [M, dsize]=size(D);
 D=D./(ones(M,1)*sqrt(sum(D.^2)));
-
-[Noise, Fs] = audioread([noise_path noise_file]);
-
+%Choose data
+load ../dataTrain.mat
+ISIGNAL= [225:231];
+sparsity=[];
+ifig=1;
+for isignal=ISIGNAL
+x = DATA.rawSpeech{1,isignal};
+n = Noise(1:length(x))';
 %Conditioning of x
 x=x-mean(x);
 x=x/max(abs(x));
-%extract the right noise length
-noise_sig = Noise(1:length(x))';
-%Uniformization of noise
-UVnoise_sig = noise_sig/std(noise_sig);
-UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
-%future variance of noise depending on SNR
-varn= (var(x)) / (10^(SNR/10));
-%Amplification of noise
-n = (varn^(.5))*UVnoise_sig;
+
 %Noisy signal
 y= x;
-clear Noise
-
 %% MFCC extraction
 fprintf('MFCC extraction...');
 
@@ -57,7 +59,7 @@ fprintf('done.\n');
 mel_p = sum(pspectrumx) ;
 % figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
-energythresh = 100;                             % threshold for speech/silence decision
+energythresh = .2;                             % threshold for speech/silence decision
 
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
 Ex= Ex(:,a);
@@ -73,38 +75,17 @@ SNRtarget=20;%dB
 %We want epsilon such that ||Ex-Exhat||_2<= epsilon  ->
 %||Ex||_2/||Ex-Exhat||_2 >= 20dB
 
-epsilon= mean( sum(Ex.^2)/10^(SNRtarget/10) );
-% [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
-%                                     getEpsilon(nbframe,Ex, SNRtarget, D);
-sigSNR=0;
-zhat= zeros(dsize, nbframe);
-while (sigSNR<=SNRtarget)
-    epsilon=epsilon/2;
-    cvx_begin quiet
-        variables zhat_tmp(dsize,nbframe)
-        minimize( max( sum( abs(zhat_tmp) ) ) )
-        subject to
-            D*zhat_tmp >= eps
-            max( sum( (Ex - D*zhat_tmp).^2) )<= epsilon
-    cvx_end
-    
-    if strcmp(cvx_status,'Solved')
-        zhat=zhat_tmp;
-        sigSNR=mean( 10*log10( sum(Ex.^2)./sum((Ex-D*zhat).^2) ) )
-    else
-        warning('Problem %s\n',cvx_status);
-        break;
-    end
-    
-end
+[zhat, epsilon ]= getEpsilon(Ex, SNRtarget, D);
 Exhat=D*zhat;
 
-PrincipalCompNb=zeros(M,nbframe);
-for iframe = 1:nbframe
-    [~, ~, PrincipalCompNb(:,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
-end
+sigSNR= mean( 10*log10( sum(Ex.^2)./sum((Ex-Exhat).^2) ) );
 
-err_ratio= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
+PrincipalCompNb= zeros(1,nbframe);
+for iframe = 1:nbframe
+    [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
+end
+sparsity=horzcat(sparsity,PrincipalCompNb);
+% err_ratio= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 %     err_ratio_1(ilambda)=var(Ex(:)-Exhat_1(:))/var(En(:));
     
 %     ilambda=ilambda+1;
@@ -119,14 +100,19 @@ err_ratio= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 % logPx=logPx+abs(min(logPx));
 % fprintf('Overall sparsity= %02d%%\n',round(100*sum(zhatstorage(:)==0)/length(zhatstorage(:))));
 
-
+end
 %%PLOTS
-ifig=1;
-plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
-[snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+% ifig=1;
+% plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
+% [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+% 
+figure(ifig), clf;  ifig=ifig+1;
+histogram(sparsity)%,round(nbframe/2));
+title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
+% 
+% figure(ifig), clf;  ifig=ifig+1;
+% plot(mel_p); %soundsc(x,Fs)
 
-figure, histogram(PrincipalCompNb)%,round(nbframe/2));
-title({'Number of components representing .95% of energy in zhat vector over the frames';['epsilon= ' num2str(epsilon)]});
 % figure(ifig); clf; ifig=ifig+1;
 % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
 % stem(zhatstorage(:));
