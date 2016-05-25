@@ -4,7 +4,7 @@ function [zhat, epsilon ]= getEpsilon(Ex, SNRtarget, D)
 dsize= size(D,2);
 
 
-epsilon= min( sum(Ex.^2)/10^(SNRtarget/10) );
+epsilon=sum(Ex.^2)/10^(SNRtarget/10);
 % [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
 %                                     getEpsilon(nbframe,Ex, SNRtarget, D);
 iproblem=1;
@@ -16,9 +16,9 @@ while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved'))
         minimize( max( sum( abs(zhat) ) ) )
         subject to
             D*zhat >= eps
-            max( sum( (Ex - D*zhat).^2) )<= epsilon
+            sum( (Ex - D*zhat).^2) <= epsilon%*ones(1,nbframe);
     cvx_end
-%     fprintf('Problem %s, epsilon= %f\n',cvx_status,epsilon);
+    fprintf('Problem %d %s\n',iproblem,cvx_status);
     
     epsilon=2^iproblem*epsilon;
     iproblem=iproblem+1;

@@ -32,7 +32,8 @@ clear Codebooks;
 D=D./(ones(M,1)*sqrt(sum(D.^2)));
 %Choose data
 load ../dataTrain.mat
-ISIGNAL= [225:231];
+ISIGNAL= [225:225];
+ISIGNAL=113;
 sparsity=[];
 ifig=1;
 for isignal=ISIGNAL
@@ -102,16 +103,16 @@ sparsity=horzcat(sparsity,PrincipalCompNb);
 
 end
 %%PLOTS
-% ifig=1;
-% plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
-% [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
-% 
+ifig=1;
+plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
+[snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+
 figure(ifig), clf;  ifig=ifig+1;
 histogram(sparsity)%,round(nbframe/2));
 title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
 % 
-% figure(ifig), clf;  ifig=ifig+1;
-% plot(mel_p); %soundsc(x,Fs)
+figure(ifig), clf;  ifig=ifig+1;
+plot(mel_p); %soundsc(x,Fs)
 
 % figure(ifig); clf; ifig=ifig+1;
 % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;

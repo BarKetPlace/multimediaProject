@@ -45,7 +45,6 @@ if denoise_flag
 else 
     fprintf([data_filename ' MFCC Extraction...']);
 end
-
 MFCCcell = getMFCC(DATA,denoise_flag);%extract MFCCs
 fprintf('done.\n');
 %dataTrain is very heavy so we create a copy containing only the utterance name
