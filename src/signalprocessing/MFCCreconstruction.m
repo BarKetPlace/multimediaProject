@@ -1,6 +1,6 @@
 clear all
 % close all
-clc
+% clc
 % cd /home/antoine/Documents/multimediaProject/src/signalprocessing
 
 
@@ -10,41 +10,43 @@ noise_path = '../../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [Noise, Fs] = audioread([noise_path noise_file]);
-% %extract the right noise length
-% noise_sig = Noise(1:length(x))';
-% %Uniformization of noise
-% UVnoise_sig = noise_sig/std(noise_sig);
-% UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
-% %future variance of noise depending on SNR
-% varn= (var(x)) / (10^(SNR/10));
-% %Amplification of noise
-% n = (varn^(.5))*UVnoise_sig;
-% n=0;
-% clear Noise
+
 
 % Choose codebook
 load ../Codebooks
 D=Codebooks{1,2};%
 clear Codebooks;
-
-
 [M, dsize]=size(D);
 D=D./(ones(M,1)*sqrt(sum(D.^2)));
+
+
 %Choose data
-load ../dataTrain.mat
-ISIGNAL= [225:225];
-ISIGNAL=113;
+load ../dataTest.mat
+ISIGNAL= [23:23];
+ISIGNAL=123;
 sparsity=[];
-ifig=1;
+ifig=5;
+tic
 for isignal=ISIGNAL
 x = DATA.rawSpeech{1,isignal};
 n = Noise(1:length(x))';
 %Conditioning of x
 x=x-mean(x);
 x=x/max(abs(x));
+%extract the right noise length
+noise_sig = Noise(1:length(x))';
+%Uniformization of noise
+UVnoise_sig = noise_sig/std(noise_sig);
+UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
+%future variance of noise depending on SNR
+varn= (var(x)) / (10^(SNR/10));
+%Amplification of noise
+n = (varn^(.5))*UVnoise_sig;
+% n=0;
+% clear Noise
 
 %Noisy signal
-y= x;
+y= x+n;
 %% MFCC extraction
 fprintf('MFCC extraction...');
 
@@ -57,29 +59,45 @@ cd signalprocessing
 fprintf('done.\n');
 
 %Compute power of each frame
-mel_p = sum(pspectrumx) ;
+mel_p = sum(pspectrumy) ;
 % figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
-energythresh = .2;                             % threshold for speech/silence decision
+
+i=2;
+while mel_p(i)<=2*mel_p(i-1)
+    i=i+1;
+end
+energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
+
+% energythresh = 250;
 
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
+an = mel_p <= energythresh * ones(1, length(mel_p)) ;
+
+En_estimated=mean(mean(Ey(:,an)));
 Ex= Ex(:,a);
 Ey= Ey(:,a);
 En_model= En_model(:,a);
 % %Actual noise on the features
-En= Ey- Ex;
+En=Ey-Ex;
+
+
 
 nbframe=size(Ex,2);
 
 %% Find the boundary epsilon
-SNRtarget=20;%dB
+SNRtarget=40;%dB
 %We want epsilon such that ||Ex-Exhat||_2<= epsilon  ->
 %||Ex||_2/||Ex-Exhat||_2 >= 20dB
 
-[zhat, epsilon ]= getEpsilon(Ex, SNRtarget, D);
-Exhat=D*zhat;
+% [epsilon]= getEpsilon(Ex, SNRtarget, D);
+% Exhat=D*zhat;
+%% find zhat
 
+zhat=getzhat(D,Ey,SNRtarget,En_estimated,mel_p);%En_estimated*ones(size(En))) ;
+Exhat=D*zhat;
 sigSNR= mean( 10*log10( sum(Ex.^2)./sum((Ex-Exhat).^2) ) );
+
 
 PrincipalCompNb= zeros(1,nbframe);
 for iframe = 1:nbframe
@@ -102,8 +120,9 @@ sparsity=horzcat(sparsity,PrincipalCompNb);
 % fprintf('Overall sparsity= %02d%%\n',round(100*sum(zhatstorage(:)==0)/length(zhatstorage(:))));
 
 end
-%%PLOTS
-ifig=1;
+toc
+%% PLOTS
+
 plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
 [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
 
@@ -112,7 +131,8 @@ histogram(sparsity)%,round(nbframe/2));
 title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
 % 
 figure(ifig), clf;  ifig=ifig+1;
-plot(mel_p); %soundsc(x,Fs)
+plot(mel_p,'LineWidth',2); hold on;
+plot([1 length(mel_p)],energythresh*[1 1])%soundsc(x,Fs)
 
 % figure(ifig); clf; ifig=ifig+1;
 % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;

@@ -81,14 +81,21 @@ if ~isempty(D)
     mel_p = sum(pspectrum) ;
 % figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
-energythresh = .2;                             % threshold for speech/silence decision
+energythresh= 140;                             % threshold for speech/silence decision
+an= mel_p < energythresh * ones(1, length(mel_p)) ;
+while ~any(an==1)
+    energythresh = energythresh+20;
+    an= mel_p < energythresh * ones(1, length(mel_p)) ;
+end
 
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
-Ex= aspectrum(:,a);
 
+Ex= aspectrum(:,a);
+En= mean(mean(aspectrum(:,an)));
     cd signalprocessing
-    [zhat, epsilon ]= getEpsilon(Ex, 20, D);
+    [zhat]= getzhat(D, Ex, 40, En);
     cd ..
+    
     aspectrum(:,a)=D*zhat;
 %    for iframe = 1:size(aspectrum,2)
 % %        fprintf('iframe:: %d\n',iframe);
