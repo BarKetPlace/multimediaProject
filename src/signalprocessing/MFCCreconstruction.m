@@ -23,9 +23,9 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 %Choose data
 load ../dataTest.mat
 ISIGNAL= [23:23];
-ISIGNAL=123;
+ISIGNAL=63;
 sparsity=[];
-ifig=5;
+ifig=1;
 tic
 for isignal=ISIGNAL
 x = DATA.rawSpeech{1,isignal};
@@ -63,39 +63,41 @@ mel_p = sum(pspectrumy) ;
 % figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
 
+%find the energy threshold by
 i=2;
 while mel_p(i)<=2*mel_p(i-1)
     i=i+1;
 end
 energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
-
-% energythresh = 250;
-
-a = mel_p > energythresh * ones(1, length(mel_p)) ;
+% energythresh=0;
+%Silence frame
 an = mel_p <= energythresh * ones(1, length(mel_p)) ;
+En_estimated=Ey(:,an);
 
-En_estimated=mean(mean(Ey(:,an)));
+%Speech frames
+a = mel_p > energythresh * ones(1, length(mel_p)) ;
 Ex= Ex(:,a);
 Ey= Ey(:,a);
 En_model= En_model(:,a);
+speechmel_p=mel_p(a);
 % %Actual noise on the features
 En=Ey-Ex;
-
-
 
 nbframe=size(Ex,2);
 
 %% Find the boundary epsilon
-SNRtarget=40;%dB
+%The epsilon boudary is easy to find: 
 %We want epsilon such that ||Ex-Exhat||_2<= epsilon  ->
 %||Ex||_2/||Ex-Exhat||_2 >= 20dB
+SNRtarget=20;%dB
+%It is computed in getzhat
 
-% [epsilon]= getEpsilon(Ex, SNRtarget, D);
-% Exhat=D*zhat;
-%% find zhat
+%% Find zhat
 
-zhat=getzhat(D,Ey,SNRtarget,En_estimated,mel_p);%En_estimated*ones(size(En))) ;
+zhat=getzhat(D,Ey,SNRtarget,En_estimated,speechmel_p);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
+
+
 sigSNR= mean( 10*log10( sum(Ex.^2)./sum((Ex-Exhat).^2) ) );
 
 
@@ -125,6 +127,7 @@ toc
 
 plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
 [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+snr_mel_energy/snr_denoise
 
 figure(ifig), clf;  ifig=ifig+1;
 histogram(sparsity)%,round(nbframe/2));

@@ -79,40 +79,44 @@ end
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
     mel_p = sum(pspectrum) ;
-% figure, plot(mel_p); soundsc(x,Fs)
-% % isolate filter bank energies that correspond to speech signal
-energythresh= 140;                             % threshold for speech/silence decision
-an= mel_p < energythresh * ones(1, length(mel_p)) ;
-while ~any(an==1)
-    energythresh = energythresh+20;
-    an= mel_p < energythresh * ones(1, length(mel_p)) ;
-end
-
-a = mel_p > energythresh * ones(1, length(mel_p)) ;
-
-Ex= aspectrum(:,a);
-En= mean(mean(aspectrum(:,an)));
+    % figure, plot(mel_p); soundsc(x,Fs)
+    
+    % % isolate filter bank energies that correspond to speech signal
+    %find the energy threshold
+    i=2;
+    while mel_p(i)<=2*mel_p(i-1)
+        i=i+1;
+    end
+    energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
+    %Silence frame
+    an = mel_p <= energythresh * ones(1, length(mel_p)) ;
+    En_estimated=aspectrum(:,an);
+    
+    %Speech frames
+    a = mel_p > energythresh * ones(1, length(mel_p)) ;
+    Ex= aspectrum(:,a);
+    
     cd signalprocessing
-    [zhat]= getzhat(D, Ex, 40, En);
+    [zhat]= getzhat(D, Ex, 40, mean(En_estimated,2),mel_p(a));
     cd ..
     
     aspectrum(:,a)=D*zhat;
-%    for iframe = 1:size(aspectrum,2)
-% %        fprintf('iframe:: %d\n',iframe);
-%        ey = aspectrum(:,iframe); %ey = ex + en
-%        zhat = getzhat(D,ey);
-%        
-%        aspectrum(:,iframe) = D*zhat;
-%        
-% %     figure(1), clf
-% %         plot(ey,'LineWidth',2); hold on; plot(aspectrum(:,iframe))
-% %     figure(1), clf;
-% %     subplot(121);
-% %     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
-% %     subplot(122);
-% %     stem(zhat);
-%      
-%    end
+    %    for iframe = 1:size(aspectrum,2)
+    % %        fprintf('iframe:: %d\n',iframe);
+    %        ey = aspectrum(:,iframe); %ey = ex + en
+    %        zhat = getzhat(D,ey);
+    %
+    %        aspectrum(:,iframe) = D*zhat;
+    %
+    % %     figure(1), clf
+    % %         plot(ey,'LineWidth',2); hold on; plot(aspectrum(:,iframe))
+    % %     figure(1), clf;
+    % %     subplot(121);
+    % %     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
+    % %     subplot(122);
+    % %     stem(zhat);
+    %
+    %    end
 end
 
 
