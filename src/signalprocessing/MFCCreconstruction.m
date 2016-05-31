@@ -22,9 +22,10 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 %Choose data
 load ../dataTest.mat
-ISIGNAL= [23:23];
-ISIGNAL=63;
+% ISIGNAL= [1:length(DATA.rawSpeech)];
+ISIGNAL=23;
 sparsity=[];
+t_=[];
 ifig=1;
 tic
 for isignal=ISIGNAL
@@ -72,29 +73,50 @@ energythresh=max(mel_p(1:i-1));                             % threshold for spee
 % energythresh=0;
 %Silence frame
 an = mel_p <= energythresh * ones(1, length(mel_p)) ;
-En_estimated=Ey(:,an);
+% En_estimated=Ey(:,an);
+En_silence= Ey(:,an);
 
+% figure,histogram(En_silence(:))
 %Speech frames
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
 Ex= Ex(:,a);
 Ey= Ey(:,a);
 En_model= En_model(:,a);
-speechmel_p=mel_p(a);
+speechmel_p=mel_p(a)/max(abs(mel_p(a)));
 % %Actual noise on the features
 En=Ey-Ex;
 
-nbframe=size(Ex,2);
+nbframe=size(Ex,2); %Number of non-silence frame
+%%
+% t=mean(En_silence,2);
 
+% cvx_begin quiet
+%     variables t(M,1)%weight(1,nbframe)
+%     minimize( norm(En - (t)*(1-speechmel_p),2) )
+% cvx_end
+% t_=horzcat(t_,t);
+
+t=[0.0282,0.0182,0.0619,0.0079,0.0110,0.1912,0.0865,0.0343, ...
+    0.0567,0.0178,0.0267,0.0184,0.0215,0.0195,0.0235,0.0286, ...
+    0.0324,0.0273,0.0272,0.0292,0.0276,0.0301,0.0283,0.0266, ...
+    0.0270,0.0247]';% Found by minimizing ||En-t*speechmel_p|| on the whole testing set
+
+En_estimated= (median(En_silence,2))*(1-speechmel_p);
+
+10*log10( sum(En(:).^2)/sum( (En(:)-En_estimated(:)).^2) )
+figure(13), clf; plot(En(:)); hold on; plot(En_estimated(:));
 %% Find the boundary epsilon
 %The epsilon boudary is easy to find: 
-%We want epsilon such that ||Ex-Exhat||_2<= epsilon  ->
-%||Ex||_2/||Ex-Exhat||_2 >= 20dB
-SNRtarget=20;%dB
+%We want epsilon such that ||Ex-Exhat||_2<= epsilon  and
+%||Ex||_2/||Ex-Exhat||_2 >= SNRtarget in dB
 %It is computed in getzhat
+
+SNRtarget=40;%dB
+
 
 %% Find zhat
 
-zhat=getzhat(D,Ey,SNRtarget,En_estimated,speechmel_p);%En_estimated*ones(size(En))) ;
+zhat=getzhat(D,Ey,SNRtarget,En_estimated);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
 
 

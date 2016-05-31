@@ -1,5 +1,5 @@
 function plotMFCC(ifig, Ex,Ey,Exhat)
-% function plotMFCC(Ex,Ey,Exhat,En)
+% function plotMFCC(Ex,Ey,Exhat)
 [M, nbframe]=size(Ex);
 
 figure(ifig), clf;

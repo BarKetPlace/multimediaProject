@@ -1,4 +1,4 @@
-function [zhat] = getzhat(D,Ey,SNRtarget,En,mel_p)
+function [zhat] = getzhat(D,Ey,SNRtarget,En)
 %[zhat] = getzhat(D,Ey,SNRtarget,En,mel_p)
 %IN ::  D      -> Dictionnary (M x dsize matrix)
 %       Ey      -> Observation (M x nbframe matrix)
@@ -15,13 +15,14 @@ dsize= size(D,2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% Frame by frame processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-weight=1- mel_p./sum(mel_p);
-weight=ones(1,nbframe);
+% weight=1- mel_p./sum(mel_p);
+% weight=ones(1,nbframe);
 
-En=(mean(En,2)*ones(1,nbframe)).*(ones(M,1)*weight);
+
+% En=(mean(En,2)*ones(1,nbframe)).*(ones(M,1)*weight);
 
 epsilon=sum((Ey-En).^2)/10^(SNRtarget/10);
-extra= sum(En.^2);
+% extra= sum(En.^2);
 % [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
 %                                     getEpsilon(nbframe,Ex, SNRtarget, D);
 % Eyhat=zeros(size(Ey));
@@ -40,7 +41,7 @@ for iframe = 1:nbframe
             subject to
                 D*zhat_tmp >= eps
 %         z0>=0
-                sum( (D*zhat_tmp-ey).^2) <= epsilon(iframe)+extra(iframe)
+                sum( (D*zhat_tmp-ey+en).^2) <= epsilon(iframe)
 
         cvx_end
         
