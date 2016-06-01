@@ -90,14 +90,15 @@ if ~isempty(D)
     energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
     %Silence frame
     an = mel_p <= energythresh * ones(1, length(mel_p)) ;
-    En_estimated=aspectrum(:,an);
+%     En_estimated=aspectrum(:,an);
     
     %Speech frames
     a = mel_p > energythresh * ones(1, length(mel_p)) ;
     Ex= aspectrum(:,a);
+    En_estimated= (median(aspectrum(:,an),2))*(1-mel_p(a));
     
     cd signalprocessing
-    [zhat]= getzhat(D, Ex, 40, mean(En_estimated,2),mel_p(a));
+    [zhat]= getzhat(D, Ex, 40, En_estimated);
     cd ..
     
     aspectrum(:,a)=D*zhat;

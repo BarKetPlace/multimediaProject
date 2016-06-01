@@ -23,7 +23,7 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [1:length(DATA.rawSpeech)];
-ISIGNAL=23;
+ISIGNAL=28;
 sparsity=[];
 t_=[];
 ifig=1;
@@ -104,7 +104,7 @@ t=[0.0282,0.0182,0.0619,0.0079,0.0110,0.1912,0.0865,0.0343, ...
 En_estimated= (median(En_silence,2))*(1-speechmel_p);
 
 10*log10( sum(En(:).^2)/sum( (En(:)-En_estimated(:)).^2) )
-figure(13), clf; plot(En(:)); hold on; plot(En_estimated(:));
+% figure(13), clf; plot(En(:)); hold on; plot(En_estimated(:));
 %% Find the boundary epsilon
 %The epsilon boudary is easy to find: 
 %We want epsilon such that ||Ex-Exhat||_2<= epsilon  and
@@ -116,7 +116,7 @@ SNRtarget=40;%dB
 
 %% Find zhat
 
-zhat=getzhat(D,Ey,SNRtarget,En_estimated);%En_estimated*ones(size(En))) ;
+zhat=getzhat(D,Ey,SNRtarget,En_model);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
 
 

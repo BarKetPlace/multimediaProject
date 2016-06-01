@@ -33,16 +33,15 @@ for iframe = 1:nbframe
     ey=Ey(:,iframe);
     en=En(:,iframe);
     
-    cvx_status='';    
+    lambda=1e8;
+    cvx_status='';
     while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
         cvx_begin quiet
-            variables zhat_tmp(dsize)
-            minimize( norm( zhat_tmp, 1 ))% +100000*
+            variables zhat_tmp(dsize) %pert(1)
+            minimize( norm( zhat_tmp, 1 ))%+lambda*pert)% +100000*
             subject to
                 D*zhat_tmp >= eps
-%         z0>=0
-                sum( (D*zhat_tmp-ey+en).^2) <= epsilon(iframe)
-
+                sum( (D*zhat_tmp-ey+en).^2) <= epsilon(iframe)% + pert%+sum(en.^2)
         cvx_end
         
 
@@ -61,12 +60,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Entire signal processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% % En= mean(En,2)*ones(1,nbframe);
 % 
-% En= mean(En,2)*ones(1,nbframe);
-% 
-% epsilon= sum((Ey).^2) /10^(SNRtarget/10);
-% weight=1- mel_p./sum(mel_p);
-% En=En.*(ones(M,1)*weight);
+% epsilon= sum((Ey-En).^2) /10^(SNRtarget/10);
+% % weight=1- mel_p./sum(mel_p);
+% % En=En.*(ones(M,1)*weight);
 % 
 % % % weight=ones(1,nbframe);
 % % En=(En*ones(1,nbframe)).*(ones(M,1)*weight);
@@ -78,7 +77,7 @@ end
 %         minimize( max( sum( abs(zhat) ) ) )
 %         subject to
 %         D*zhat >= eps
-%         sum( (D*zhat-Ey).^2) <= epsilon + %*ones(1,nbframe);
+%         sum( (D*zhat-Ey+En).^2) <= epsilon%*ones(1,nbframe);
 %         cvx_end
 %         
 %         epsilon=2^iproblem*epsilon;

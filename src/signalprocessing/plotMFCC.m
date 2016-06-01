@@ -13,8 +13,5 @@ ylabel('Value f coefficient');
 set(gca,'Xtick',[round(M/2):M:length(Ex(:))]);
 set(gca,'XtickLabel',[1:nbframe]);
 title('Denoising results');
-
-
-
 end
 
