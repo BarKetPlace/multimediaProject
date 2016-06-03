@@ -49,7 +49,7 @@ SAMPRATE = sr;
 
 % Values coming out of rasta treat samples as integers, 
 % not range -1..1, hence scale up here to match (approx)
-y = abs(specgram(x,NFFT,SAMPRATE,WINDOW,NOVERLAP)).^2;
+y = specgram(x,NFFT,SAMPRATE,WINDOW,NOVERLAP);
 
 % imagine we had random dither that had a variance of 1 sample 
 % step and a white spectrum.  That's like (in expectation, anyway)

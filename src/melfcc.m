@@ -69,7 +69,7 @@ end
 % Compute FFT power spectrum
 [pspectrum,logE] = powspec(samples, sr, wintime, hoptime, dither);
 % pspectrum=power_spectrum(samples)
-aspectrum = audspec(pspectrum, sr, nbands, fbtype, minfreq, maxfreq, sumpower, bwidth);
+aspectrum = audspec(abs(pspectrum).^2, sr, nbands, fbtype, minfreq, maxfreq, sumpower, bwidth);
 
 if (usecmp)
   % PLP-like weighting/compression

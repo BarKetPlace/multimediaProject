@@ -33,7 +33,7 @@ for iframe = 1:nbframe
     ey=Ey(:,iframe);
     en=En(:,iframe);
     
-    lambda=1e8;
+%     lambda=1e8;
     cvx_status='';
     while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
         cvx_begin quiet
@@ -41,7 +41,7 @@ for iframe = 1:nbframe
             minimize( norm( zhat_tmp, 1 ))%+lambda*pert)% +100000*
             subject to
                 D*zhat_tmp >= eps
-                sum( (D*zhat_tmp-ey+en).^2) <= epsilon(iframe)% + pert%+sum(en.^2)
+                sum( (D*zhat_tmp-ey).^2) <= .5%epsilon(iframe)%+sum(en.^2)
         cvx_end
         
 

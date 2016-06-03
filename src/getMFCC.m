@@ -14,11 +14,12 @@ function [MFCCcell] = getMFCC(DATA,denoise_flag)
 D=[];
 
 %Load Dictionnary in case of denoising
-% if denoise_flag
+if denoise_flag
     load Codebooks.mat
     D = Codebooks{1,2}; %We arbitrarly choose a dictionary
-% end
     D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
+end
+   
 NbFiles = length(DATA.utt);
 %  fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles

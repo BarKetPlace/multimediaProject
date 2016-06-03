@@ -5,7 +5,7 @@ clear all
 
 
 isignal= 238;
-SNR=5;
+SNR=10;
 noise_path = '../../TIMIT/NoiseDB/NoiseX_16kHz/';
 noise_file = 'white_16kHz.wav';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,10 +22,12 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 %Choose data
 load ../dataTest.mat
-% ISIGNAL= [1:length(DATA.rawSpeech)];
-ISIGNAL=28;
+ISIGNAL= [1:length(DATA.rawSpeech)];
+% ISIGNAL=28;
 sparsity=[];
 t_=[];
+En_=[];
+En_model_=[];
 ifig=1;
 tic
 for isignal=ISIGNAL
@@ -48,6 +50,11 @@ n = (varn^(.5))*UVnoise_sig;
 
 %Noisy signal
 y= x+n;
+% ffty=abs(fft(y)).^2;
+% fftx=abs(fft(x)).^2;
+% fftn=abs(fft(n)).^2;
+% figure, plot(abs(fft(y)-fft(x)).^2, 'LineWidth',2); hold on; plot(fftn);
+% figure, plot(fftx+fftn); hold on; plot(ffty);
 %% MFCC extraction
 fprintf('MFCC extraction...');
 
@@ -60,7 +67,7 @@ cd signalprocessing
 fprintf('done.\n');
 
 %Compute power of each frame
-mel_p = sum(pspectrumy) ;
+mel_p = sum(abs(pspectrumy).^2) ;
 % figure, plot(mel_p); soundsc(x,Fs)
 % % isolate filter bank energies that correspond to speech signal
 
@@ -85,7 +92,12 @@ En_model= En_model(:,a);
 speechmel_p=mel_p(a)/max(abs(mel_p(a)));
 % %Actual noise on the features
 En=Ey-Ex;
-
+En_=horzcat(En_,En);
+En_model_=horzcat(En_model_,En_model);
+figure, histogram(sum(En_.^2));
+figure, histogram(sum(En_model_.^2));
+end
+while 1
 nbframe=size(Ex,2); %Number of non-silence frame
 %%
 % t=mean(En_silence,2);
@@ -96,13 +108,13 @@ nbframe=size(Ex,2); %Number of non-silence frame
 % cvx_end
 % t_=horzcat(t_,t);
 
-t=[0.0282,0.0182,0.0619,0.0079,0.0110,0.1912,0.0865,0.0343, ...
-    0.0567,0.0178,0.0267,0.0184,0.0215,0.0195,0.0235,0.0286, ...
-    0.0324,0.0273,0.0272,0.0292,0.0276,0.0301,0.0283,0.0266, ...
-    0.0270,0.0247]';% Found by minimizing ||En-t*speechmel_p|| on the whole testing set
+% t=[0.0282,0.0182,0.0619,0.0079,0.0110,0.1912,0.0865,0.0343, ...
+%     0.0567,0.0178,0.0267,0.0184,0.0215,0.0195,0.0235,0.0286, ...
+%     0.0324,0.0273,0.0272,0.0292,0.0276,0.0301,0.0283,0.0266, ...
+%     0.0270,0.0247]';% Found by minimizing ||En-t*speechmel_p|| on the whole testing set
 
 En_estimated= (median(En_silence,2))*(1-speechmel_p);
-
+% En_estimated= En_model.*(ones(M,1)*speechmel_p);
 10*log10( sum(En(:).^2)/sum( (En(:)-En_estimated(:)).^2) )
 % figure(13), clf; plot(En(:)); hold on; plot(En_estimated(:));
 %% Find the boundary epsilon
@@ -112,11 +124,9 @@ En_estimated= (median(En_silence,2))*(1-speechmel_p);
 %It is computed in getzhat
 
 SNRtarget=40;%dB
-
-
 %% Find zhat
 
-zhat=getzhat(D,Ey,SNRtarget,En_model);%En_estimated*ones(size(En))) ;
+zhat=getzhat(D,Ex,SNRtarget,En_estimated);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
 
 
@@ -144,6 +154,7 @@ sparsity=horzcat(sparsity,PrincipalCompNb);
 % fprintf('Overall sparsity= %02d%%\n',round(100*sum(zhatstorage(:)==0)/length(zhatstorage(:))));
 
 end
+
 toc
 %% PLOTS
 
