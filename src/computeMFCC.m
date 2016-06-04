@@ -20,9 +20,9 @@ if (strcmp(data_filename,'dataTrain'))%Compute MFCC on training datas
     
 elseif (strcmp(data_filename,'dataTest'))%Compute MFCC on testing datas
     ark_filename = [outputFolder 'raw_MatlabMFCC_test.ark'];
-        if (snr~=-1) %Compute on noisy features
-            data_filename = [data_filename 'Noisy' num2str(snr) 'dB'];           
-        end
+%         if (snr~=-1) %Compute on noisy features
+%             data_filename = [data_filename 'Noisy' num2str(snr) 'dB'];           
+%         end
         
 elseif (strcmp(data_filename,'dataDev'))%Compute MFCC on dev datas
     ark_filename = [outputFolder 'raw_MatlabMFCC_dev.ark'];
@@ -45,7 +45,7 @@ if denoise_flag
 else 
     fprintf([data_filename ' MFCC Extraction...']);
 end
-MFCCcell = getMFCC(DATA,denoise_flag);%extract MFCCs
+MFCCcell = getMFCC(DATA,snr,denoise_flag);%extract MFCCs
 fprintf('done.\n');
 %dataTrain is very heavy so we create a copy containing only the utterance name
 %and the MFCCs

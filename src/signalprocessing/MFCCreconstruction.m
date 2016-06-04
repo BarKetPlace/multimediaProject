@@ -22,8 +22,8 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 %Choose data
 load ../dataTest.mat
-ISIGNAL= [1:length(DATA.rawSpeech)];
-% ISIGNAL=28;
+% ISIGNAL= [1:length(DATA.rawSpeech)];
+ISIGNAL=31;
 sparsity=[];
 t_=[];
 En_=[];
@@ -60,9 +60,9 @@ fprintf('MFCC extraction...');
 
 cd ..
 %Extract mfcc
-[cepstrax,Ex,pspectrumx] = melfcc(x, Fs, [],'useenergy',1);
-[cepstray,Ey,pspectrumy] = melfcc(y, Fs, [],'useenergy',1);
-[cepstran,En_model,pspectrumn] = melfcc(n, Fs, [],'useenergy',1);
+[cepstrax,Ex,pspectrumx] = melfcc(x, Fs, []);
+[cepstray,Ey,pspectrumy] = melfcc(y, Fs, []);
+[cepstran,En_model,pspectrumn] = melfcc(n, Fs, []);
 cd signalprocessing
 fprintf('done.\n');
 
@@ -94,10 +94,9 @@ speechmel_p=mel_p(a)/max(abs(mel_p(a)));
 En=Ey-Ex;
 En_=horzcat(En_,En);
 En_model_=horzcat(En_model_,En_model);
-figure, histogram(sum(En_.^2));
-figure, histogram(sum(En_model_.^2));
-end
-while 1
+figure(12), histogram(sum(En_.^2));
+figure(13), histogram(sum(En_model_.^2));
+
 nbframe=size(Ex,2); %Number of non-silence frame
 %%
 % t=mean(En_silence,2);

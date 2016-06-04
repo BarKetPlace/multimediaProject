@@ -1,4 +1,4 @@
-function [cepstra,aspectrum,pspectrum] = melfcc(samples, sr,D, varargin)
+function [cepstra,aspectrum,pspectrum] = melfcc(y,En, sr,D, varargin)
 %[cepstra,aspectrum,pspectrum] = melfcc(samples, sr[, opts ...])
 %  Calculate Mel-frequency cepstral coefficients by:
 %   - take the absolute value of the STFT
@@ -62,6 +62,8 @@ function [cepstra,aspectrum,pspectrum] = melfcc(samples, sr,D, varargin)
 	  'fbtype', 'mel', 'usecmp', 0, 'modelorder', 0, ...
           'broaden', 0, 'useenergy', 0);
 
+samples=y;
+
 if preemph ~= 0
   samples = filter([1 -preemph], 1, samples);
 end
@@ -78,7 +80,7 @@ end
 
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
-    mel_p = sum(pspectrum) ;
+    mel_p = sum(abs(pspectrum).^2) ;
     % figure, plot(mel_p); soundsc(x,Fs)
     
     % % isolate filter bank energies that correspond to speech signal
@@ -94,14 +96,15 @@ if ~isempty(D)
     
     %Speech frames
     a = mel_p > energythresh * ones(1, length(mel_p)) ;
-    Ex= aspectrum(:,a);
+    Ey= aspectrum(:,a);
     En_estimated= (median(aspectrum(:,an),2))*(1-mel_p(a));
     
     cd signalprocessing
-    [zhat]= getzhat(D, Ex, 40, En_estimated);
+    [zhat]= getzhat(D, aspectrum, 20, En);
     cd ..
     
-    aspectrum(:,a)=D*zhat;
+%     aspectrum(:,a)=D*zhat;
+    aspectrum=D*zhat;
     %    for iframe = 1:size(aspectrum,2)
     % %        fprintf('iframe:: %d\n',iframe);
     %        ey = aspectrum(:,iframe); %ey = ex + en

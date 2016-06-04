@@ -1,4 +1,4 @@
-function [MFCCcell] = getMFCC(DATA,denoise_flag)
+function [MFCCcell] = getMFCC(DATA,snr,denoise_flag)
 %% Mel filter bank (Tiphanie report section C.2.3 - Filter Bank)
 
 % %Overlap between triangles, percentage of step in mel domain (between 0 and 1)
@@ -20,29 +20,47 @@ if denoise_flag
     D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
 end
    
+%load Noise in case of snr != -1
+if snr~=-1
+    noise_path = '../TIMIT/NoiseDB/NoiseX_16kHz/';
+noise_file = 'white_16kHz.wav';
+
+    [Noise] = audioread([noise_path noise_file]);
+
+end
+
+
 NbFiles = length(DATA.utt);
 %  fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles
     fprintf('%02d%%\n',round(100*ifile/NbFiles));
     x = DATA.rawSpeech{1,ifile};
-
-    y = x;
-    y=y(:);%No noise
-%     SigLength = length(y); %Length of the target signal
-%     stdSig = std(y); % variance
-%     
-%     %%Frame by frame processing
-% %     MFCC = zeros(nframe, 13);
-%     MFCC = [];
-%     n = 1;%Begining of a frame
-%     m = frameLength;%End of a frame
-%     iframe=1;
-    [cepstra,aspectrum,pspectrum] = melfcc(y,Fs,D,...
-        'lifterexp',0,...
-        'nbands', 26,...
-        'preemph',0,...
-        'sumpower',1,...
-        'maxfreq',8000);
+    
+    if snr~=-1
+    %Create noise
+    %extract the right noise length
+    noise_sig = Noise(1:length(x))';
+    %Uniformization of noise
+    UVnoise_sig = noise_sig/std(noise_sig);
+    UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
+    %future variance of noise depending on SNR
+    varn= (var(x)) / (10^(snr/10));
+    %Amplification of noise
+    n = (varn^(.5))*UVnoise_sig;
+    y = x + n;
+    y=y(:);
+    
+    %First off we process the clean signal
+    [~,Ex,pspectrum] = melfcc(x,[],Fs,[]);
+    %Then the noisy signal
+    [~,Ey,pspectrum] = melfcc(y,[],Fs,[]);
+    
+    %Then we use the noise's features to denoise the
+    [cepstra,aspectrum,pspectrum] = melfcc(y,Ey-Ex,Fs,D);
+    else %if snr==-1 (no additive noise)
+        y=x;
+    [cepstra,aspectrum,pspectrum] = melfcc(y,[],Fs,D);
+    end
 %     while (m ~= SigLength)
 %         yf = y(n:m);
 %        
