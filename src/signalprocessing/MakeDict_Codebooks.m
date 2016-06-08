@@ -25,15 +25,15 @@ for ifile = 1:NbFiles       % For all wav files in data
     
         % get mel features
     cd ../
-    [~, mel_e, mel_p] = melfcc(y, Fs, [], 'useenergy', 1) ;
+    [~, mel_e, mel_p] = melfcc(y,[], Fs, []) ;
     cd signalprocessing/
     
         % get energy per frame
-    mel_p = sum(mel_p) ;
-    
-        % isolate filter bank energies that correspond to speech signal
-    a = mel_p > energythresh * ones(1, length(mel_p)) ;
-    fbe_speech = mel_e(:, a) ;
+%     mel_p = sum(mel_p) ;
+%     
+%         % isolate filter bank energies that correspond to speech signal
+%     a = mel_p > energythresh * ones(1, length(mel_p)) ;
+    fbe_speech = mel_e;%(:, a) ;
     
         % store them in dictionnary
     Dict(:, iter:iter+length(fbe_speech)-1) = fbe_speech ;
@@ -42,8 +42,8 @@ for ifile = 1:NbFiles       % For all wav files in data
 end
 
     % normalize data
-[Dict, Dict_par] = mapstd(Dict) ;
-Dict = struct('mean', Dict_par.xmean, 'std', Dict_par.xstd, 'dictionnary', Dict) ;
+% [Dict, Dict_par] = mapstd(Dict) ;
+% Dict = struct('mean', Dict_par.xmean, 'std', Dict_par.xstd, 'dictionnary', Dict) ;
 
     % save
 save('../Dictionnary.mat', 'Dict') ;
@@ -56,15 +56,22 @@ clc
 load ../Dictionnary.mat
 
     % initialize parameters
-bits = 4:8 ;
+bits = 5 ;
 Codebooks = cell(1, length(bits)) ;
-
+    M=size(Cb,2);
     % compute codebooks from clustering of Dictionnary
-for i = 1 : length(bits)        
+for i = 1 : length(bits)
+    fprintf('%d bits\n', bits(i));
     [~, Cb] = kmeans(Dict', 2^(bits(i))) ;          % call built-in kmeans function
-    Codebooks(1, i) =  {Cb'} ;                      % store result in cell        
+    % normalization
+    D=Cb';
+    D=D./(ones(M,1)*sqrt(sum(D.^2)));
+    Codebooks(1, i) =  {D} ;                      % store result in cell        
 end
+
+
     
+
     % save result
 save('../Codebooks.mat', 'Codebooks') ;
 
