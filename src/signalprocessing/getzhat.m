@@ -34,12 +34,12 @@ for iframe = 1:nbframe
     iproblem=1;
     ey=Ey(:,iframe);
 %     en=En(:,iframe);
-%      epsilon=max(sum(En.^2));
+%       epsilon=.001
 %     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
 %     lambda=1e8;
 if ~isempty(En)
-    epsilon=max(sum(En.^2));
-    epsilon=.01;
+    epsilon=mean(sum(En.^2));
+     epsilon=.03;
 else
     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
 end
@@ -50,7 +50,7 @@ end
             variables zhat_tmp(dsize) %pert(1)
             minimize( norm( zhat_tmp, 1 ))%+lambda*pert)% +100000*
             subject to
-                D*zhat_tmp >= eps
+                zhat_tmp >= eps
                 sum( (D*zhat_tmp-ey).^2) <= epsilon%+sum(en.^2)
         cvx_end
         
@@ -64,7 +64,7 @@ end
     %     zhatstorage(:,iframe)=zhat;
 %      10*log10(sum(ex.^2)/sum((ex-D*zhat_tmp).^2))
     zhat(:,iframe)=zhat_tmp;
-
+% figure, stem(zhat_tmp)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

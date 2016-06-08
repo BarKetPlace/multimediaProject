@@ -14,7 +14,7 @@ noise_file = 'white_16kHz.wav';
 
 % Choose codebook
 load ../Codebooks
-D=Codebooks{1,2};%
+D=Codebooks{1,1};%
 clear Codebooks;
 [M, dsize]=size(D);
 D=D./(ones(M,1)*sqrt(sum(D.^2)));
@@ -22,9 +22,9 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 %Choose data
 load ../dataTest.mat
-ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
+% ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
 % ISIGNAL= [1:10];
-% ISIGNAL=31;
+ISIGNAL=31;
 sparsity=[];
 t_=[];
 En_=[];
@@ -78,7 +78,7 @@ while mel_p(i)<=2*mel_p(i-1)
     i=i+1;
 end
 energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
-% energythresh=0;
+% energythresh=140;
 %Silence frame
 an = mel_p <= energythresh * ones(1, length(mel_p)) ;
 % En_estimated=Ey(:,an);
@@ -137,7 +137,7 @@ for iframe = 1:nbframe
     [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
 end
 sparsity=horzcat(sparsity,PrincipalCompNb);
-err_ratio(isignal)= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
+err_ratio(isignal)= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2
 %     err_ratio_1(ilambda)=var(Ex(:)-Exhat_1(:))/var(En(:));
     
 %     ilambda=ilambda+1;
@@ -155,52 +155,52 @@ err_ratio(isignal)= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 end
 
 toc
-% %% PLOTS
+%% PLOTS
+
+plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
+[snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+snr_mel_energy/snr_denoise
+
+figure(ifig), clf;  ifig=ifig+1;
+histogram(sparsity)%,round(nbframe/2));
+title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
 % 
-% plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
-% [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
-% snr_mel_energy/snr_denoise
+figure(ifig), clf;  ifig=ifig+1;
+plot(mel_p,'LineWidth',2); hold on;
+plot([1 length(mel_p)],energythresh*[1 1])%soundsc(x,Fs)
+
+% figure(ifig); clf; ifig=ifig+1;
+% stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
+% stem(zhatstorage(:));
+% set(gca,'Xtick',[round(dsize/2):dsize:length(zhatstorage(:))]);
+% set(gca,'XtickLabel',[1:nbframe]);
+% title('zhat ');
 % 
-% figure(ifig), clf;  ifig=ifig+1;
-% histogram(sparsity)%,round(nbframe/2));
-% title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
-% % 
-% figure(ifig), clf;  ifig=ifig+1;
-% plot(mel_p,'LineWidth',2); hold on;
-% plot([1 length(mel_p)],energythresh*[1 1])%soundsc(x,Fs)
+% % %% Frame by frame
 % 
-% % figure(ifig); clf; ifig=ifig+1;
-% % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
-% % stem(zhatstorage(:));
-% % set(gca,'Xtick',[round(dsize/2):dsize:length(zhatstorage(:))]);
-% % set(gca,'XtickLabel',[1:nbframe]);
-% % title('zhat ');
-% % 
-% % % %% Frame by frame
-% % 
-% % iframe = round((nbframe-1)*rand())+1;
-% % iframe=9;
-% % 
-% % ey= Ey(:,iframe);%Set friendly variable
-% % ex= Ex(:,iframe);
-% % en_model= En_model(:,iframe);
-% % en= En(:,iframe);
-% % exhat=Exhat(:,iframe);
-% % if any(exhat<=0)
-% %     fprintf('Negative value\n');
-% % end
-% % 
-% % framefig=figure(ifig); clf; ifig=ifig+1;
-% % subplot(121);
-% % plot(ey,'LineWidth',2); hold on;
-% % plot(ex,'LineWidth',2); hold on
-% % plot(exhat);
-% % legend('Ey','Ex','Exhat');
-% % xlabel('Mel space coefficent');
-% % ylabel('Value f coefficient');
-% % subplot(122);
-% % stem(zhatstorage(:,iframe));
-% % 
+% iframe = round((nbframe-1)*rand())+1;
+% iframe=9;
+% 
+% ey= Ey(:,iframe);%Set friendly variable
+% ex= Ex(:,iframe);
+% en_model= En_model(:,iframe);
+% en= En(:,iframe);
+% exhat=Exhat(:,iframe);
+% if any(exhat<=0)
+%     fprintf('Negative value\n');
+% end
+% 
+% framefig=figure(ifig); clf; ifig=ifig+1;
+% subplot(121);
+% plot(ey,'LineWidth',2); hold on;
+% plot(ex,'LineWidth',2); hold on
+% plot(exhat);
+% legend('Ey','Ex','Exhat');
+% xlabel('Mel space coefficent');
+% ylabel('Value f coefficient');
+% subplot(122);
+% stem(zhatstorage(:,iframe));
+% 
 % % 
 % % %%
 % % % 
