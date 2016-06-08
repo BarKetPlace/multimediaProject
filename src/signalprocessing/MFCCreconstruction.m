@@ -22,8 +22,9 @@ D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 %Choose data
 load ../dataTest.mat
-% ISIGNAL= [1:length(DATA.rawSpeech)];
-ISIGNAL=31;
+ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
+% ISIGNAL= [1:10];
+% ISIGNAL=31;
 sparsity=[];
 t_=[];
 En_=[];
@@ -60,9 +61,9 @@ fprintf('MFCC extraction...');
 
 cd ..
 %Extract mfcc
-[cepstrax,Ex,pspectrumx] = melfcc(x, Fs, []);
-[cepstray,Ey,pspectrumy] = melfcc(y, Fs, []);
-[cepstran,En_model,pspectrumn] = melfcc(n, Fs, []);
+[cepstrax,Ex,pspectrumx] = melfcc(x, [], Fs, []);
+[cepstray,Ey,pspectrumy] = melfcc(y, [], Fs, []);
+[cepstran,En_model,pspectrumn] = melfcc(n, [], Fs, []);
 cd signalprocessing
 fprintf('done.\n');
 
@@ -86,16 +87,15 @@ En_silence= Ey(:,an);
 % figure,histogram(En_silence(:))
 %Speech frames
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
-Ex= Ex(:,a);
-Ey= Ey(:,a);
+% Ex= Ex(:,a);
+% Ey= Ey(:,a);
 En_model= En_model(:,a);
 speechmel_p=mel_p(a)/max(abs(mel_p(a)));
 % %Actual noise on the features
 En=Ey-Ex;
 En_=horzcat(En_,En);
 En_model_=horzcat(En_model_,En_model);
-figure(12), histogram(sum(En_.^2));
-figure(13), histogram(sum(En_model_.^2));
+
 
 nbframe=size(Ex,2); %Number of non-silence frame
 %%
@@ -114,7 +114,7 @@ nbframe=size(Ex,2); %Number of non-silence frame
 
 En_estimated= (median(En_silence,2))*(1-speechmel_p);
 % En_estimated= En_model.*(ones(M,1)*speechmel_p);
-10*log10( sum(En(:).^2)/sum( (En(:)-En_estimated(:)).^2) )
+% 10*log10( sum(En(:).^2)/sum( (En(:)-En_estimated(:)).^2) )
 % figure(13), clf; plot(En(:)); hold on; plot(En_estimated(:));
 %% Find the boundary epsilon
 %The epsilon boudary is easy to find: 
@@ -125,7 +125,7 @@ En_estimated= (median(En_silence,2))*(1-speechmel_p);
 SNRtarget=40;%dB
 %% Find zhat
 
-zhat=getzhat(D,Ex,SNRtarget,En_estimated);%En_estimated*ones(size(En))) ;
+zhat=getzhat(D,Ey,SNRtarget,En);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
 
 
@@ -137,7 +137,7 @@ for iframe = 1:nbframe
     [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
 end
 sparsity=horzcat(sparsity,PrincipalCompNb);
-% err_ratio= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
+err_ratio(isignal)= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2;
 %     err_ratio_1(ilambda)=var(Ex(:)-Exhat_1(:))/var(En(:));
     
 %     ilambda=ilambda+1;
@@ -155,76 +155,76 @@ sparsity=horzcat(sparsity,PrincipalCompNb);
 end
 
 toc
-%% PLOTS
-
-plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
-[snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
-snr_mel_energy/snr_denoise
-
-figure(ifig), clf;  ifig=ifig+1;
-histogram(sparsity)%,round(nbframe/2));
-title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
+% %% PLOTS
 % 
-figure(ifig), clf;  ifig=ifig+1;
-plot(mel_p,'LineWidth',2); hold on;
-plot([1 length(mel_p)],energythresh*[1 1])%soundsc(x,Fs)
-
-% figure(ifig); clf; ifig=ifig+1;
-% stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
-% stem(zhatstorage(:));
-% set(gca,'Xtick',[round(dsize/2):dsize:length(zhatstorage(:))]);
-% set(gca,'XtickLabel',[1:nbframe]);
-% title('zhat ');
+% plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
+% [snr_denoise, snr_mel_energy ]= plotSNR(ifig,Ex,Exhat,En); ifig=ifig+1;
+% snr_mel_energy/snr_denoise
 % 
-% % %% Frame by frame
-% 
-% iframe = round((nbframe-1)*rand())+1;
-% iframe=9;
-% 
-% ey= Ey(:,iframe);%Set friendly variable
-% ex= Ex(:,iframe);
-% en_model= En_model(:,iframe);
-% en= En(:,iframe);
-% exhat=Exhat(:,iframe);
-% if any(exhat<=0)
-%     fprintf('Negative value\n');
-% end
-% 
-% framefig=figure(ifig); clf; ifig=ifig+1;
-% subplot(121);
-% plot(ey,'LineWidth',2); hold on;
-% plot(ex,'LineWidth',2); hold on
-% plot(exhat);
-% legend('Ey','Ex','Exhat');
-% xlabel('Mel space coefficent');
-% ylabel('Value f coefficient');
-% subplot(122);
-% stem(zhatstorage(:,iframe));
-% 
-% 
-% %%
+% figure(ifig), clf;  ifig=ifig+1;
+% histogram(sparsity)%,round(nbframe/2));
+% title({['Number of components representing .95% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
 % % 
+% figure(ifig), clf;  ifig=ifig+1;
+% plot(mel_p,'LineWidth',2); hold on;
+% plot([1 length(mel_p)],energythresh*[1 1])%soundsc(x,Fs)
+% 
+% % figure(ifig); clf; ifig=ifig+1;
+% % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
+% % stem(zhatstorage(:));
+% % set(gca,'Xtick',[round(dsize/2):dsize:length(zhatstorage(:))]);
+% % set(gca,'XtickLabel',[1:nbframe]);
+% % title('zhat ');
+% % 
+% % % %% Frame by frame
+% % 
+% % iframe = round((nbframe-1)*rand())+1;
+% % iframe=9;
+% % 
+% % ey= Ey(:,iframe);%Set friendly variable
+% % ex= Ex(:,iframe);
+% % en_model= En_model(:,iframe);
+% % en= En(:,iframe);
+% % exhat=Exhat(:,iframe);
+% % if any(exhat<=0)
+% %     fprintf('Negative value\n');
+% % end
+% % 
+% % framefig=figure(ifig); clf; ifig=ifig+1;
+% % subplot(121);
+% % plot(ey,'LineWidth',2); hold on;
+% % plot(ex,'LineWidth',2); hold on
+% % plot(exhat);
+% % legend('Ey','Ex','Exhat');
+% % xlabel('Mel space coefficent');
+% % ylabel('Value f coefficient');
+% % subplot(122);
+% % stem(zhatstorage(:,iframe));
+% % 
+% % 
+% % %%
+% % % 
+% % % % figure(ifig), clf; ifig=ifig+1;
+% % % % plot(snr_mel_energy); hold on;
+% % % % plot(snr_time);
+% % % % 
+% % % % legend('mel energy domain','time domain');
+% % % % title('Frame by frame SNR');
+% % % % xlabel('Frame number');
+% % % % ylabel('SNRdB');
+% % % 
+% % % 
 % % % figure(ifig), clf; ifig=ifig+1;
-% % % plot(snr_mel_energy); hold on;
-% % % plot(snr_time);
-% % % 
-% % % legend('mel energy domain','time domain');
-% % % title('Frame by frame SNR');
+% % % plot(logPy); hold on;
+% % % plot(iframe*[1 1], [min(logPy) max(logPy)]);hold on;
+% % % % plot([1 nbframe], threshold*[1 1]);
 % % % xlabel('Frame number');
-% % % ylabel('SNRdB');
-% % 
-% % 
-% % figure(ifig), clf; ifig=ifig+1;
-% % plot(logPy); hold on;
-% % plot(iframe*[1 1], [min(logPy) max(logPy)]);hold on;
-% % % plot([1 nbframe], threshold*[1 1]);
-% % xlabel('Frame number');
-% % ylabel('sum(abs(X(f))^2)');
-% % title('Power of each frame');
-% % 
-% % energy_snr=[snr_mel_energy;logPy];
-% % 
-% % [~,idx] = sort(snr_mel_energy);
+% % % ylabel('sum(abs(X(f))^2)');
+% % % title('Power of each frame');
 % % % 
+% % % energy_snr=[snr_mel_energy;logPy];
 % % % 
-% % % 
+% % % [~,idx] = sort(snr_mel_energy);
+% % % % 
+% % % % 
+% % % % 

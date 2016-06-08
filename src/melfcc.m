@@ -100,7 +100,7 @@ if ~isempty(D)
     En_estimated= (median(aspectrum(:,an),2))*(1-mel_p(a));
     
     cd signalprocessing
-    [zhat]= getzhat(D, aspectrum, 20, En);
+    [zhat]= getzhat(D, aspectrum, 60, En);
     cd ..
     
 %     aspectrum(:,a)=D*zhat;

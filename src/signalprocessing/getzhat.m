@@ -22,23 +22,28 @@ dsize= size(D,2);
 % En=(mean(En,2)*ones(1,nbframe)).*(ones(M,1)*weight);
 
 % epsilon=sum((Ey-En).^2)/10^(SNRtarget/10);
-if ~isempty(En)
-    epsilon=max(sum(En.^2));
-else
-    epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
-end
-% extra= sum(En.^2);
+
+
 % [Exhat, epsilon_tab, PrincipalCompNb, zhatstorage,SNR_Reconst]= ...
 %                                     getEpsilon(nbframe,Ex, SNRtarget, D);
 % Eyhat=zeros(size(Ey));
 % zhat= zeros(dsize, nbframe);
 
 for iframe = 1:nbframe
+
     iproblem=1;
     ey=Ey(:,iframe);
 %     en=En(:,iframe);
-    epsilon=max(sum(En.^2));
+%      epsilon=max(sum(En.^2));
+%     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
 %     lambda=1e8;
+if ~isempty(En)
+    epsilon=max(sum(En.^2));
+    epsilon=.01;
+else
+    epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
+end
+
     cvx_status='';
     while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
         cvx_begin quiet
@@ -50,7 +55,7 @@ for iframe = 1:nbframe
         cvx_end
         
 
-             fprintf('frame %d, Problem %d %s\n',iframe, iproblem,cvx_status);
+        fprintf('frame %d, Problem %d %s\n',iframe, iproblem,cvx_status);
         %     fprintf('Problem %d %s\n', iproblem,cvx_status);
         
         epsilon(1)=2^iproblem*epsilon(1);
@@ -65,10 +70,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Entire signal processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% % En= mean(En,2)*ones(1,nbframe);
 % 
-% epsilon= sum((Ey-En).^2) /10^(SNRtarget/10);
+% % En= mean(En,2)*ones(1,nbframe);
+% if ~isempty(En)
+%     epsilon=max(sum(En.^2));
+% else
+%     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
+% end
+% % epsilon= sum((Ey-En).^2) /10^(SNRtarget/10);
 % % weight=1- mel_p./sum(mel_p);
 % % En=En.*(ones(M,1)*weight);
 % 
@@ -82,7 +91,7 @@ end
 %         minimize( max( sum( abs(zhat) ) ) )
 %         subject to
 %         D*zhat >= eps
-%         sum( (D*zhat-Ey+En).^2) <= epsilon%*ones(1,nbframe);
+%         max(sum( (D*zhat-Ey).^2)) <= epsilon%*ones(1,nbframe);
 %         cvx_end
 %         
 %         epsilon=2^iproblem*epsilon;

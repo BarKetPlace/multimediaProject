@@ -37,29 +37,29 @@ for ifile = 1:NbFiles
     x = DATA.rawSpeech{1,ifile};
     
     if snr~=-1
-    %Create noise
-    %extract the right noise length
-    noise_sig = Noise(1:length(x))';
-    %Uniformization of noise
-    UVnoise_sig = noise_sig/std(noise_sig);
-    UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
-    %future variance of noise depending on SNR
-    varn= (var(x)) / (10^(snr/10));
-    %Amplification of noise
-    n = (varn^(.5))*UVnoise_sig;
-    y = x + n;
-    y=y(:);
-    
-    %First off we process the clean signal
-    [~,Ex,pspectrum] = melfcc(x,[],Fs,[]);
-    %Then the noisy signal
-    [~,Ey,pspectrum] = melfcc(y,[],Fs,[]);
-    
-    %Then we use the noise's features to denoise the
-    [cepstra,aspectrum,pspectrum] = melfcc(y,Ey-Ex,Fs,D);
+        %Create noise
+        %extract the right noise length
+        noise_sig = Noise(1:length(x))';
+        %Uniformization of noise
+        UVnoise_sig = noise_sig/std(noise_sig);
+        UVnoise_sig = UVnoise_sig -mean(UVnoise_sig);
+        %future variance of noise depending on SNR
+        varn= (var(x)) / (10^(snr/10));
+        %Amplification of noise
+        n = (varn^(.5))*UVnoise_sig;
+        y = x + n;
+        y=y(:);
+        
+        %First off we process the clean signal
+        [~,Ex,pspectrum] = melfcc(x,[],Fs,[]);
+        %Then the noisy signal
+        [~,Ey,pspectrum] = melfcc(y,[],Fs,[]);
+        
+        %Then we use the noise's features to denoise the
+        [cepstra,aspectrum,pspectrum] = melfcc(y,Ey-Ex,Fs,D);
     else %if snr==-1 (no additive noise)
         y=x;
-    [cepstra,aspectrum,pspectrum] = melfcc(y,[],Fs,D);
+        [cepstra,aspectrum,pspectrum] = melfcc(y,[],Fs,D);
     end
 %     while (m ~= SigLength)
 %         yf = y(n:m);
