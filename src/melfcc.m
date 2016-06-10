@@ -100,11 +100,11 @@ if ~isempty(D)
     En_estimated= (median(aspectrum(:,an),2))*(1-mel_p(a));
     
     cd signalprocessing
-    [zhat]= getzhat(D, aspectrum, 60, En);
+    [zhat]= getzhat(D, Ey, 60, En);
     cd ..
     
-%     aspectrum(:,a)=D*zhat;
-    aspectrum=D*zhat;
+     aspectrum(:,a)=D*zhat;
+%     aspectrum=D*zhat;
     %    for iframe = 1:size(aspectrum,2)
     % %        fprintf('iframe:: %d\n',iframe);
     %        ey = aspectrum(:,iframe); %ey = ex + en

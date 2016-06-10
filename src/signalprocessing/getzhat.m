@@ -38,7 +38,7 @@ for iframe = 1:nbframe
 %     lambda=1e8;
 
 
-[estimatedI, zhat_tmp, r] = getSupport(D,10,ey,en);
+[estimatedI, zhat_tmp, r] = getSupport(D,8,ey,en);
 
 % 
 % if ~isempty(En)

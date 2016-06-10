@@ -9,12 +9,12 @@ K=5;
 Ampl_max=20;
 
 %Create data
-A=randn(M,dsize)*sqrt(1/M)+2;         %Dictionary
+A=randn(M,dsize)*sqrt(1/M)+2;       %Dictionary
 A=A./(ones(M,1)*sqrt(sum(A.^2)));   %Normalization
 x=zeros(dsize,1);                   %Sparse vector
 
 trueI= round((dsize-1)*rand(K,1))+1;%nz indices
-x(trueI)= Ampl_max*(rand(K,1)-0); %nz values
+x(trueI)= Ampl_max*(rand(K,1)-0);   %nz values
 y= A*x;                             %Observation
 
 %% Now we want to find the sparse vector x from y, K and A

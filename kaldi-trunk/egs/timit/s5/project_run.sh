@@ -57,7 +57,7 @@ matlab -nojvm -nodesktop -r "cd('$matlabcode');\
 fi
 
 if [ $snr != -1 ];then
-	comment="Noisy data, snr= $snr"
+	comment=$comment" Noisy data, snr= $snr"
 	#create the noisy data
 	matlab -nojvm -nodesktop -r "cd('$matlabcode'); makenoise($snr); quit;"
 fi
@@ -84,7 +84,7 @@ numGaussSGMM=9000
 
 feats_nj=10
 train_nj=30
-decode_nj=10
+decode_nj=4
 
 echo ============================================================================
 echo "                Data & Lexicon & Language Preparation                     "
@@ -110,7 +110,7 @@ echo ===========================================================================
 
 #Call matlab to compute the mfcc on the training data
 x=train
-matlab -nojvm -nodesktop -r "cd('$matlabcode'); computeMFCC('dataTrain'); quit;"
+matlab -nojvm -nodesktop -r "cd('$matlabcode'); computeMFCC('dataTrain',-1,0); quit;"
 
 #prepare the folders to match the kaldi requirements
 sort "$mfccdir"/raw_${mfccdir}_$x.scp > data/feats.scp
@@ -128,7 +128,7 @@ echo ===========================================================================
 #Perform the monophone training
 steps/train_mono.sh  --nj "$train_nj" --cmd "$train_cmd" data/train data/lang exp/mono
 utils/mkgraph.sh --mono data/lang_test_bg exp/mono exp/mono/graph
-fi
+fi #End training
 
 
 echo ============================================================================
