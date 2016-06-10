@@ -24,7 +24,7 @@ clear Codebooks;
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
 % ISIGNAL= [1:10];
-ISIGNAL=46;
+ISIGNAL=150;
 sparsity=[];
 t_=[];
 En_=[];
