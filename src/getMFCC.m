@@ -16,8 +16,8 @@ D=[];
 %Load Dictionnary in case of denoising
 if denoise_flag
     load Codebooks.mat
-    D = Codebooks{1,2}; %We arbitrarly choose a dictionary
-    D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
+    D = Codebooks{1,1}; %We arbitrarly choose a dictionary
+%     D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
 end
    
 %load Noise in case of snr != -1

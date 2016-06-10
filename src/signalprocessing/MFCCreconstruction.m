@@ -17,14 +17,14 @@ load ../Codebooks
 D=Codebooks{1,1};%
 clear Codebooks;
 [M, dsize]=size(D);
-D=D./(ones(M,1)*sqrt(sum(D.^2)));
+% D=D./(ones(M,1)*sqrt(sum(D.^2)));
 
 
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
 % ISIGNAL= [1:10];
-ISIGNAL=31;
+ISIGNAL=46;
 sparsity=[];
 t_=[];
 En_=[];
@@ -78,7 +78,7 @@ while mel_p(i)<=2*mel_p(i-1)
     i=i+1;
 end
 energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
-% energythresh=140;
+% energythresh=105;
 %Silence frame
 an = mel_p <= energythresh * ones(1, length(mel_p)) ;
 % En_estimated=Ey(:,an);
@@ -89,13 +89,12 @@ En_silence= Ey(:,an);
 a = mel_p > energythresh * ones(1, length(mel_p)) ;
 % Ex= Ex(:,a);
 % Ey= Ey(:,a);
-En_model= En_model(:,a);
+% En_model= En_model(:,a);
 speechmel_p=mel_p(a)/max(abs(mel_p(a)));
 % %Actual noise on the features
 En=Ey-Ex;
 En_=horzcat(En_,En);
 En_model_=horzcat(En_model_,En_model);
-
 
 nbframe=size(Ex,2); %Number of non-silence frame
 %%
@@ -125,7 +124,12 @@ En_estimated= (median(En_silence,2))*(1-speechmel_p);
 SNRtarget=40;%dB
 %% Find zhat
 
-zhat=getzhat(D,Ey,SNRtarget,En);%En_estimated*ones(size(En))) ;
+K_speech= 10;
+K_sil= 10;
+K= K_speech*ones(nbframe,1);
+K(an)= K_sil;
+
+zhat=getzhat(D,Ey,K,En);%En_estimated*ones(size(En))) ;
 Exhat=D*zhat;
 
 
@@ -134,7 +138,7 @@ sigSNR= mean( 10*log10( sum(Ex.^2)./sum((Ex-Exhat).^2) ) );
 
 PrincipalCompNb= zeros(1,nbframe);
 for iframe = 1:nbframe
-    [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .95);
+    [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .9999);
 end
 sparsity=horzcat(sparsity,PrincipalCompNb);
 err_ratio(isignal)= norm(Ex(:) - Exhat(:),2)^2/norm(En(:),2)^2

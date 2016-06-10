@@ -1,4 +1,4 @@
-function [zhat] = getzhat(D,Ey,SNRtarget,En)
+function [zhat] = getzhat(D,Ey,K,En)
 %[zhat] = getzhat(D,Ey,SNRtarget,En,mel_p)
 %IN ::  D      -> Dictionnary (M x dsize matrix)
 %       Ey      -> Observation (M x nbframe matrix)
@@ -10,8 +10,7 @@ function [zhat] = getzhat(D,Ey,SNRtarget,En)
 
 [M,nbframe]= size(Ey);
 dsize= size(D,2);
-
-
+zhat= zeros(dsize, nbframe);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% Frame by frame processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -33,39 +32,47 @@ for iframe = 1:nbframe
 
     iproblem=1;
     ey=Ey(:,iframe);
-%     en=En(:,iframe);
+    en=En(:,iframe);
 %       epsilon=.001
 %     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
 %     lambda=1e8;
-if ~isempty(En)
-    epsilon=mean(sum(En.^2));
-     epsilon=.03;
-else
-    epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
-end
 
-    cvx_status='';
-    while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
-        cvx_begin quiet
-            variables zhat_tmp(dsize) %pert(1)
-            minimize( norm( zhat_tmp, 1 ))%+lambda*pert)% +100000*
-            subject to
-                zhat_tmp >= eps
-                sum( (D*zhat_tmp-ey).^2) <= epsilon%+sum(en.^2)
-        cvx_end
-        
 
-        fprintf('frame %d, Problem %d %s\n',iframe, iproblem,cvx_status);
-        %     fprintf('Problem %d %s\n', iproblem,cvx_status);
-        
-        epsilon(1)=2^iproblem*epsilon(1);
-        iproblem=iproblem+1;
-    end
-    %     zhatstorage(:,iframe)=zhat;
-%      10*log10(sum(ex.^2)/sum((ex-D*zhat_tmp).^2))
+[estimatedI, zhat_tmp, r] = getSupport(D,10,ey,en);
+
+% 
+% if ~isempty(En)
+%     epsilon=sum(en.^2);
+% %      epsilon=.03;
+% else
+%     epsilon=max(sum(Ey.^2)/10^(SNRtarget/10));
+% end
+% 
+%     cvx_status='';
+%     
+%     while (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
+%         cvx_begin quiet
+%             variables zhat_tmp(K) %pert(1)
+%             minimize( norm( zhat_tmp, 1 ))%+lambda*pert)% +100000*
+%             subject to
+%                 zhat_tmp >= eps
+%                 sum( (D(:,estimatedI)*zhat_tmp-ey).^2) <= epsilon%+sum(en.^2)
+%         cvx_end
+%         
+% 
+% %         fprintf('frame %d, Problem %d %s\n',iframe, iproblem,cvx_status);
+%         %     fprintf('Problem %d %s\n', iproblem,cvx_status);
+%         
+%         epsilon(1)=2^iproblem*epsilon(1);
+%         iproblem=iproblem+1;
+%     end
+% %     %     zhatstorage(:,iframe)=zhat;
+% % %      10*log10(sum(ex.^2)/sum((ex-D*zhat_tmp).^2))
+% 
     zhat(:,iframe)=zhat_tmp;
-% figure, stem(zhat_tmp)
-end
+    fprintf('Frame %d/%d\n',iframe,nbframe);
+% % figure, stem(zhat_tmp)
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Entire signal processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
