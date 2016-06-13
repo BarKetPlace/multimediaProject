@@ -324,7 +324,7 @@ if nargout
     end
     if any(mode=='t')
         ph=cell(0,0);
-        fidw=fopen([filename(1:end-3) 'phn'],'r');
+        fidw=fopen([filename(1:end-3) 'PHN'],'r');
         if fidw>0
             while 1
                 tline = fgetl(fidw); % read an input line

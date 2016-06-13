@@ -80,47 +80,134 @@ end
 
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
-    mel_p = sum(abs(pspectrum).^2) ;
-    % figure, plot(mel_p); soundsc(x,Fs)
+    [M,dsize]= size(D);
     
-    % % isolate filter bank energies that correspond to speech signal
-    %find the energy threshold
+    Ey= aspectrum;
+    
+     mel_py = sum(abs(pspectrum).^2) ;
+%     mel_px = sum(abs(pspectrumx).^2) ;
+    [~,minI]= min(mel_py);% Assumption:: should be zero
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%      isolate filter bank energies that correspond to speech signal
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+    %find the energy threshold by
     i=2;
-    while mel_p(i)<=2*mel_p(i-1)
+    while mel_py(i)<=2*mel_py(i-1)
         i=i+1;
     end
-    energythresh=max(mel_p(1:i-1));                             % threshold for speech/silence decision
-    %Silence frame
-    an = mel_p <= energythresh * ones(1, length(mel_p)) ;
-%     En_estimated=aspectrum(:,an);
+    energythresh=max(mel_py(1:i-1));      % threshold for speech/silence decision
     
+    %Silence frame    
+    an = mel_py <= energythresh * ones(1, length(mel_py)) ;
     %Speech frames
-    a = mel_p > energythresh * ones(1, length(mel_p)) ;
-    Ey= aspectrum(:,a);
-    En_estimated= (median(aspectrum(:,an),2))*(1-mel_p(a));
+    a = mel_py > energythresh * ones(1, length(mel_py)) ;
+
+%     cd signalprocessing
+%     [zhat]= getzhat(D, Ey, 60, En);
+%     cd ..
+    Ey_speech=Ey(:,a);
+    En_speech= En(:,a);
+    Ey_sil=Ey(:,an);    
+    %Denoise silence
+    Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
+    Ey_sil(Ey_sil<=1e-4)=1e-4;
     
-    cd signalprocessing
-    [zhat]= getzhat(D, Ey, 60, En);
-    cd ..
-    
+    nbframe= size(Ey_speech,2);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+        for iframe = 1:nbframe% Frame by frame processing
+            fprintf('Frame %d/%d\n',iframe,nbframe);
+            %
+            zhat_frame= zeros(dsize,1);
+            
+            iproblem=1;
+            ey=Ey_speech(:,iframe);
+            en=En_speech(:,iframe);
+            boundary= .02;
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            K= 15;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %Initialization
+            k= 1; I=[]; r=[]; Ip=[]; Iu=[]; index=[]; 
+            zhat_tmp_storage=[];
+            %       Kth greatest values of D'*ey
+            [~,index]= sort(abs(D'*ey),'descend');
+            I(:,k)= index(1:K);
+            
+            %       Estimate
+            %Convex problem
+            cvx_begin quiet
+            variable zhat_tmp(K,1)
+            minimize( norm(ey - D(:,I(:,k))*zhat_tmp )  )
+            subject to
+                D(:,I(:,k))*zhat_tmp >= eps
+            cvx_end
+            
+            r(:,k)= ey- D(:,I(:,k))*zhat_tmp; %(pinv(D(:,I(:,k)))*y);
+            zhat_tmp_storage(:,k)= zhat_tmp;
+            
+            while(1)
+                k=k+1;
+                [~,index]= sort(abs(D'*r(:,k-1)),'descend');
+                Ip= index(1:K);
+                
+                Iu= union(I(:,k-1),Ip);
+                %Convex problem
+                cvx_begin quiet
+                variable zhat_tmp(length(Iu),1)
+                minimize( norm(ey - D(:,Iu)*zhat_tmp) )
+                subject to
+                    D(:,Iu)*zhat_tmp >= eps
+                cvx_end
+                
+                xhat(Iu,1)= zhat_tmp;%pinv(D(:,Iu))*y;
+                xhat(setdiff(1:dsize,Iu))=0;
+                %    figure, plot(y); hold on; plot(D*xhat)
+                
+                [~,index]= sort(abs(xhat),'descend');
+                I(:,k)= index(1:K);
+                
+                %Convex problem
+                cvx_begin quiet
+                variable zhat_tmp(K,1)
+                minimize(  norm(ey - D(:,I(:,k))*zhat_tmp ) )
+                subject to
+                    D(:,I(:,k))*zhat_tmp >= eps
+                cvx_end
+                
+                r(:,k)= ey - D(:,I(:,k))*zhat_tmp;%(pinv(D(:,I(:,k)))*ey);
+                %    figure, plot(ey); hold on; plot(D(:,I(:,k))*zhat_tmp)
+                zhat_tmp_storage(:,k)= zhat_tmp;
+                
+                
+                if  ( norm(r(:,k)) <= boundary )
+                    %         k= k - 1;
+                    Ihat= I(:,k);
+                    break;
+                elseif ( norm(r(:,k),2) >= norm(r(:,k-1),2) ) || k>2*K
+                    Ihat= I(:,k-1);
+                    zhat_tmp= zhat_tmp_storage(:,k-1);
+                    break;
+                end
+            end
+            %         figure, plot(ey); hold on; plot(D(:,Ihat)*zhat_tmp); hold on; plot(ex);
+            %         legend('ey', 'exhat','ex');
+            zhat_frame(Ihat)= zhat_tmp;
+            % Save result for the given frame
+            zhat(:,iframe)=zhat_frame;
+            
+%             figure, plot(ey); hold on; plot(D*zhat_frame);
+        end%   End Frame by frame processing
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
      aspectrum(:,a)=D*zhat;
-%     aspectrum=D*zhat;
-    %    for iframe = 1:size(aspectrum,2)
-    % %        fprintf('iframe:: %d\n',iframe);
-    %        ey = aspectrum(:,iframe); %ey = ex + en
-    %        zhat = getzhat(D,ey);
-    %
-    %        aspectrum(:,iframe) = D*zhat;
-    %
-    % %     figure(1), clf
-    % %         plot(ey,'LineWidth',2); hold on; plot(aspectrum(:,iframe))
-    % %     figure(1), clf;
-    % %     subplot(121);
-    % %     plot(ey,'LineWidth',2); hold on; plot(D*zhat);
-    % %     subplot(122);
-    % %     stem(zhat);
-    %
-    %    end
+     aspectrum(:,an)= Ey_sil;
+%     figure, plot(Ey(:)); hold on; plot(aspectrum(:));
 end
 
 

@@ -25,16 +25,24 @@ end
 
 fprintf(['Creating ' DATA_filename '...']);
 %Initialization
-DATA = struct('utt',[],'rawSpeech',[],'frames',[],'mfcc',[],'part1',[],'ourFeature',[]);
+DATA = struct('utt',[],'rawSpeech',[],'speechframes',[],'mfcc',[],'part1',[],'ourFeature',[]);
 fidBatch = fopen(listfile_path);
 tlineBatch = fgetl(fidBatch);
 i = 0;
 while ischar(tlineBatch) && i < opt.nbSignal
-i = i + 1;
 %
 % counter
+i = i + 1;
+% % Phone 
+% PHN_file=[tlineBatch(1:end-3) 'PHN']; 
+% PHNcell= importdata(PHN_file,' ');
+% for iphone= 1:length(PHNcell)
+%     splitted= strsplit(PHNcell{iphone,1}, {' '});
+%     
+% end
 % Name of utterance (for Kaldi tool)
 C = strsplit(tlineBatch,{'/','.'}) ;
+
 lenC = length(C);
 % dataTrain.utt{i} = [C{9} ' ' C{10} ' ' C{11} ' ' C{12}] ;
 % Name with train drX is blocking in Kaldi
@@ -42,12 +50,16 @@ lenC = length(C);
 DATA.utt{i} = [C{lenC-2} '_' C{lenC-1}] ;
 % dataTrain.utt{i} = tlineTrain;
 % Read Timit
-y =readsph(tlineBatch,'s',-1);
+[y,fs,wrd,phn,ffx] =readsph(tlineBatch,['s','t','w'],-1);
+phnmat_rng= fs*cell2mat(phn(:,1));
+DATA.speechframes{i}= round(phnmat_rng(2,1):phnmat_rng(size(phnmat_rng,1),1));
 %Conditioning
     y=y-mean(y);
     y=y/max(abs(y));
 % Add to structure
 DATA.rawSpeech{i} = y' ;
+
+
 % raw speech in row vector
 % Update line
 tlineBatch = fgetl(fidBatch);
@@ -64,4 +76,5 @@ save(DATA_filename,'DATA','-v7.3') ;
 %     fprintf('done.\n');
 fprintf('done.\n');
 end
+
 

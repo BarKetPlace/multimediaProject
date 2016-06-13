@@ -43,7 +43,7 @@ while(1)
     variable xhat_tmp(length(Iu),1)
     minimize( norm(y - A(:,Iu)*xhat_tmp) )
     subject to
-        A(:,Iu)*xhat_tmp >= 0
+        A(:,Iu)*xhat_tmp >= eps
     cvx_end
 
    xhat(Iu,1)= xhat_tmp;%pinv(A(:,Iu))*y;
@@ -56,7 +56,7 @@ while(1)
    %Convex problem
    cvx_begin quiet
    variable xhat_tmp(K,1)
-   minimize( norm(y - A(:,I(:,k))*xhat_tmp )  )
+   minimize(  norm(y - A(:,I(:,k))*xhat_tmp ) )
    subject to
         A(:,I(:,k))*xhat_tmp >= eps
    cvx_end

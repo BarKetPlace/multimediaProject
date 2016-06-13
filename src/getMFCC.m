@@ -16,7 +16,7 @@ D=[];
 %Load Dictionnary in case of denoising
 if denoise_flag
     load Codebooks.mat
-    D = Codebooks{1,1}; %We arbitrarly choose a dictionary
+    D = Codebooks{1,2}; %We arbitrarly choose a dictionary
 %     D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
 end
    
@@ -33,9 +33,10 @@ end
 NbFiles = length(DATA.utt);
 %  fprintf('MFCC Extraction:     \n');
 for ifile = 1:NbFiles
-    fprintf('%02d%%\n',round(100*ifile/NbFiles));
+    fprintf('File %d/%d\n',ifile,NbFiles);
     x = DATA.rawSpeech{1,ifile};
     
+%     x= x(DATA.speechframes{ifile});
     if snr~=-1
         %Create noise
         %extract the right noise length

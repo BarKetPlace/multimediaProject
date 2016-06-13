@@ -38,7 +38,7 @@ for iframe = 1:nbframe
 %     lambda=1e8;
 
 
-[estimatedI, zhat_tmp, r] = getSupport(D,4,ey,en);
+[estimatedI, zhat_tmp, r] = getSupport(D,5,ey,en);
 
 % 
 % if ~isempty(En)
@@ -72,7 +72,7 @@ for iframe = 1:nbframe
     zhat(:,iframe)=zhat_tmp;
     fprintf('Frame %d/%d\n',iframe,nbframe);
 % % figure, stem(zhat_tmp)
-% end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Entire signal processing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

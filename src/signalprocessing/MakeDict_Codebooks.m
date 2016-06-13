@@ -56,9 +56,9 @@ clc
 load ../Dictionnary.mat
 
     % initialize parameters
-bits = 5 ;
+bits = [4] ;
 Codebooks = cell(1, length(bits)) ;
-    M=size(Cb,2);
+    M=size(Dict,1);
     % compute codebooks from clustering of Dictionnary
 for i = 1 : length(bits)
     fprintf('%d bits\n', bits(i));
@@ -73,7 +73,7 @@ end
     
 
     % save result
-save('../Codebooks.mat', 'Codebooks') ;
+save('../Codebooks4b.mat', 'Codebooks') ;
 
 %% Compare project k-means function and built-in function
 close all
