@@ -78,12 +78,18 @@ if (usecmp)
   aspectrum = postaud(aspectrum, maxfreq, fbtype, broaden);
 end
 
+%  Normalization of lower value
+low_value= 1e-4;
+aspectrum(aspectrum<low_value)= low_value;
+
+
+
 %%%%%Denoise aspectrum (aspectrum is the mfccs before log and DCT
 if ~isempty(D)
     [M,dsize]= size(D);
     
     Ey= aspectrum;
-    
+    Ex= Ey-En;
      mel_py = sum(abs(pspectrum).^2) ;
 %     mel_px = sum(abs(pspectrumx).^2) ;
     [~,minI]= min(mel_py);% Assumption:: should be zero
@@ -111,101 +117,48 @@ if ~isempty(D)
 %     cd ..
     Ey_speech=Ey(:,a);
     En_speech= En(:,a);
-    Ey_sil=Ey(:,an);    
+    Ex_speech=Ex(:,a);
+    
+    Ey_sil=Ey(:,an);
+    Ex_sil= Ex(:,an);	    
+
     %Denoise silence
     Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
-    Ey_sil(Ey_sil<=1e-4)=1e-4;
+    Ey_sil(Ey_sil<=low_value)=low_value;
     
+%     Ey_sil= Ex_sil;
     nbframe= size(Ey_speech,2);
+    boundary=.001;
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
         for iframe = 1:nbframe% Frame by frame processing
-            fprintf('Frame %d/%d\n',iframe,nbframe);
+            ey= Ey_speech(:,iframe);
+%             fprintf('Frame %d/%d\n',iframe,nbframe);
             %
             zhat_frame= zeros(dsize,1);
-            
-            iproblem=1;
-            ey=Ey_speech(:,iframe);
-            en=En_speech(:,iframe);
-            boundary= .02;
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            K= 15;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %Initialization
-            k= 1; I=[]; r=[]; Ip=[]; Iu=[]; index=[]; 
-            zhat_tmp_storage=[];
-            %       Kth greatest values of D'*ey
-            [~,index]= sort(abs(D'*ey),'descend');
-            I(:,k)= index(1:K);
-            
-            %       Estimate
-            %Convex problem
-            cvx_begin quiet
-            variable zhat_tmp(K,1)
-            minimize( norm(ey - D(:,I(:,k))*zhat_tmp )  )
+                        cvx_begin quiet
+            variable zhat_frame(dsize,1)
+            minimize( norm(zhat_frame,1) )
             subject to
-                D(:,I(:,k))*zhat_tmp >= eps
+                D*zhat_frame >= low_value
+                norm( ey-D*zhat_frame ) <= boundary
             cvx_end
             
-            r(:,k)= ey- D(:,I(:,k))*zhat_tmp; %(pinv(D(:,I(:,k)))*y);
-            zhat_tmp_storage(:,k)= zhat_tmp;
-            
-            while(1)
-                k=k+1;
-                [~,index]= sort(abs(D'*r(:,k-1)),'descend');
-                Ip= index(1:K);
-                
-                Iu= union(I(:,k-1),Ip);
-                %Convex problem
-                cvx_begin quiet
-                variable zhat_tmp(length(Iu),1)
-                minimize( norm(ey - D(:,Iu)*zhat_tmp) )
-                subject to
-                    D(:,Iu)*zhat_tmp >= eps
-                cvx_end
-                
-                xhat(Iu,1)= zhat_tmp;%pinv(D(:,Iu))*y;
-                xhat(setdiff(1:dsize,Iu))=0;
-                %    figure, plot(y); hold on; plot(D*xhat)
-                
-                [~,index]= sort(abs(xhat),'descend');
-                I(:,k)= index(1:K);
-                
-                %Convex problem
-                cvx_begin quiet
-                variable zhat_tmp(K,1)
-                minimize(  norm(ey - D(:,I(:,k))*zhat_tmp ) )
-                subject to
-                    D(:,I(:,k))*zhat_tmp >= eps
-                cvx_end
-                
-                r(:,k)= ey - D(:,I(:,k))*zhat_tmp;%(pinv(D(:,I(:,k)))*ey);
-                %    figure, plot(ey); hold on; plot(D(:,I(:,k))*zhat_tmp)
-                zhat_tmp_storage(:,k)= zhat_tmp;
-                
-                
-                if  ( norm(r(:,k)) <= boundary )
-                    %         k= k - 1;
-                    Ihat= I(:,k);
-                    break;
-                elseif ( norm(r(:,k),2) >= norm(r(:,k-1),2) ) || k>2*K
-                    Ihat= I(:,k-1);
-                    zhat_tmp= zhat_tmp_storage(:,k-1);
-                    break;
-                end
+            if (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
+                Exhat_speech(:,iframe)= Ey_speech(:,iframe);
+                fprintf('/!\frame %d:: Not solved /!\\n',iframe);
+
+            else
+                Exhat_speech(:,iframe)= D*zhat_frame;
+                zhat(:,iframe)=zhat_frame;
             end
-            %         figure, plot(ey); hold on; plot(D(:,Ihat)*zhat_tmp); hold on; plot(ex);
-            %         legend('ey', 'exhat','ex');
-            zhat_frame(Ihat)= zhat_tmp;
-            % Save result for the given frame
-            zhat(:,iframe)=zhat_frame;
             
 %             figure, plot(ey); hold on; plot(D*zhat_frame);
         end%   End Frame by frame processing
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     aspectrum(:,a)=D*zhat;
+     aspectrum(:,a)=Exhat_speech;
      aspectrum(:,an)= Ey_sil;
 %     figure, plot(Ey(:)); hold on; plot(aspectrum(:));
 end
