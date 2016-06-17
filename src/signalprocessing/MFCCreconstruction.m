@@ -14,8 +14,10 @@ noise_file = 'white_16kHz.wav';
 
 % Choose codebook
 load ../Codebooks.mat
-D=Codebooks{1,1};%
-clear Codebooks;
+for boundary=[.001 .01 .02]
+for id=1:3
+D= Codebooks{1,id};%
+% clear Codebooks;
 [M, dsize]=size(D);
 
 
@@ -147,7 +149,7 @@ for isignal=ISIGNAL
 %     for iK=1:length(K_)
 %         K=K_(iK);
 
-        boundary=.01;
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
         for iframe = 1:nbframe% Frame by frame processing
@@ -282,9 +284,14 @@ plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
 
 figure(ifig), clf;  ifig=ifig+1;
 histogram(sparsity)%,round(nbframe/2));
-title({['Nb of comp to get .99% of energy'];['dsize=' num2str(dsize)];['bound= ' num2str(boundary)]});
+title({['Nb of comp to get .99% of energy'];...
+        ['dsize=' num2str(dsize) ', bound= ' num2str(boundary)];...
+        ['mean= ' num2str(mean(sparsity)) ', var= ' num2str(var(sparsity))]});
 xlabel('Number of components');
-% 
+saveas(gcf,['sparsity_dsize' num2str(dsize) '_bound' num2str(boundary) '.png']);
+
+end%End dsize
+end
 figure(ifig), clf;  ifig=ifig+1;
 plot(mel_py,'LineWidth',2); hold on;
 plot([1 length(mel_py)],energythresh*[1 1])%soundsc(x,Fs)

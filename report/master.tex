@@ -89,8 +89,11 @@
 
 %LOCAL SHORTCUTS
 \newcommand{\ehat}{\hat{\textbf{e}}}
-
-
+\newcommand{\ey}{\textbf{e}_y}
+\newcommand{\ex}{\textbf{e}_x}
+\newcommand{\en}{\textbf{e}_n}
+\newcommand{\exhat}{ \hat{\textbf{e}} }
+\newcommand{\zhat}{ \hat{\textbf{z}} }
 
 
 %Titre
@@ -106,7 +109,7 @@
 \horrule{2pt} \\[0.2cm] % Thick bottom horizontal rule
 }
 
-\author{Antoine Honoré\\ \email{honore@kth.se} \and Félix Côte\\\email{fcote@kth.se} \and Supervisor}
+\author{ Antoine Honoré\\ \email{honore@kth.se} \and Félix Côte\\\email{fcote@kth.se} }
 
 \begin{document}
 %%%%%%%%%%%%%%%% TITLE %%%%%%%%%%%%%%%%
@@ -133,19 +136,54 @@ To test our denoising scheme, we used kaldi, a free and open-source sofware. Kal
 We used the TIMIT database to train and test our system. The kaldi implementation provides testing example on different databases and TIMIT is one of them. We therefore had access the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
 
 \section{Denoising scheme}
-The idea is to reduce the dimension of \textbf{e} and find a vector
-$\ehat = \sum_{i=1}^N\textbf{d}_iz_i$ . Here, $\textbf{d}_i$ is the ith column of a fat matrix D and is used as a codebook. To reduce the dimension, \textbf{z} has have strictly less than M non-zero coefficients.
+The idea is to reduce the dimension of \textbf{e} and find a vector $\ehat = \sum_{i=1}^N\textbf{d}_iz_i$ . Here, $\textbf{d}_i$ is the ith column of a fat matrix D and is used as a codebook. To reduce the dimension, \textbf{z} has have strictly less than M non-zero coefficients.
+We denote by x the clean speech signal, n the additive noise and y = x + n, the noisy signal. 
+First we assume that the additivity holds up to the mel coefficients, $\ey= \ex + \en$.\\
+The problem is the following:\\
+we want to find a sparsed vector \textbf{z} such that $||\ey-D\textbf{z}||_2 \leq \epsilon$ and $D\mathbf{z} > 0$. If $\epsilon$ is well chosen, we will have $||\ex - \exhat||_2 \leq ||\ex - \ey||_2$
 
 \subsection{Computation of a codebook D}
 
 \subsection{Sparse vector}
+The sparsity of a vector can be measured with the $\ell^0$-norm. We could hence formulate the following problem:
+
+\begin{equation}
+  \begin{aligned}
+    & \underset{\mathbf{z}}{\text{minimize}}
+    & & ||\mathbf{z}||_0 \\
+    & \text{subject to}
+    & & ||\ey -D\mathbf{z}||_2 \leq \epsilon\\
+    &&& -D\mathbf{z} \leq \eta
+  \end{aligned}
+\label{l0}
+\end{equation}
+
+%minimize $||\mathbf{z}||_0$\\subject to $||\ey -D\mathbf{z}||_2 \leq \epsilon$\\
+
+However, $\ell^0-norm$ is a pseudo-norm, hence the problem is consider not tractable. \cite{equivalencel1l0} shows that the solution of the problem:
+\begin{equation}
+  \begin{aligned}
+    & \underset{\mathbf{z}}{\text{minimize}}
+    & & ||\mathbf{z}||_1 \\
+    & \text{subject to}
+    & & ||\ey -D\mathbf{z}||_2 \leq \epsilon\\
+    &&& -D\mathbf{z} \leq \eta
+  \end{aligned}
+\label{l1}
+\end{equation}
+ is often a good approximation of the solution of problem \ref{l0}. Problem \ref{l1} is convex and is therefore considered tractable.\\
+The value of $\eta$ is ideally 0. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our problem, we do not want any of the approximated mel coefficients to be zero, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
+%Let define $\zhat$ as the solution of problem \ref{l1}.
 
 
 \section{Results}
-\subsection{Additivity}
+\subsection{Additivity hypothesis}
 
+\subsection{Reducing the dimension}
 
+\subsection{Increase kaldi performances}
 
+\bibliography{bibtex}
 \end{document}
 %%% Local Variables:
 %%% TeX-master: "master"
