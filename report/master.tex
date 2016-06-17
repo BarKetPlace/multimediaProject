@@ -171,8 +171,8 @@ However, $\ell^0-norm$ is a pseudo-norm, hence the problem is consider not tract
   \end{aligned}
 \label{l1}
 \end{equation}
- is often a good approximation of the solution of problem \ref{l0}. Problem \ref{l1} is convex and is therefore considered tractable.\\
-The value of $\eta$ is ideally 0. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our problem, we do not want any of the approximated mel coefficients to be zero, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
+ is often a good approximation of the solution of problem \ref{l0}. Problem \ref{l1} is convex and is therefore easier and faster to solve.\\
+Ideally $\eta = 0$. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our problem, we do not want any of the approximated mel coefficients to be zero, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
 %Let define $\zhat$ as the solution of problem \ref{l1}.
 
 

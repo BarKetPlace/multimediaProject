@@ -14,9 +14,14 @@ noise_file = 'white_16kHz.wav';
 
 % Choose codebook
 load ../Codebooks.mat
-for boundary=[.001 .01 .02]
-for id=1:3
-D= Codebooks{1,id};%
+
+BOUNDARY= [.001 .005 .01 .05 .1];
+DSIZE= 1:3;
+for iboundary=1:length(BOUNDARY)
+    boundary= BOUNDARY(iboundary);
+for idsize=1:3
+    
+D= Codebooks{1,idsize};%
 % clear Codebooks;
 [M, dsize]=size(D);
 
@@ -264,8 +269,12 @@ for isignal=ISIGNAL
             [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .99);
         end
         sparsity=horzcat(sparsity,PrincipalCompNb);
+        %Save sparsity results
+        RES_mean(iboundary,idsize)= mean(sparsity);
+        RES_var(iboundary,idsize)= var(sparsity);
+        save('RES.mat','RES_mean','RES_var', 'BOUNDARY', 'DSIZE');
         
-        MSE= norm(Ex(:)-Exhat(:));
+%         MSE= norm(Ex(:)-Exhat(:));
         
     end%  End isignal=ISIGNAL
  
@@ -295,6 +304,13 @@ end
 figure(ifig), clf;  ifig=ifig+1;
 plot(mel_py,'LineWidth',2); hold on;
 plot([1 length(mel_py)],energythresh*[1 1])%soundsc(x,Fs)
+
+% dsize= [32 64 128];
+% boundary= [.001 .01 .02];
+% RES_mean= zeros(3,3); RES_var= zeros(3,3);
+% RES_mean(1,:)= [14.3242 9.7896 8.1717]
+
+
 
 % figure(ifig); clf; ifig=ifig+1;
 % stem(dsize*[1:nbframe], max(zhatstorage(:))*ones(1,nbframe),'--k'); hold on;
