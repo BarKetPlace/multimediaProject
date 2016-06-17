@@ -304,7 +304,26 @@ end
 figure(ifig), clf;  ifig=ifig+1;
 plot(mel_py,'LineWidth',2); hold on;
 plot([1 length(mel_py)],energythresh*[1 1])%soundsc(x,Fs)
-
+%%
+figure, 
+    plot(BOUNDARY,RES_mean(:,1),'LineWidth',2); hold on;
+    plot(BOUNDARY,RES_mean(:,2),'LineWidth',2); hold on;
+    plot(BOUNDARY,RES_mean(:,3),'LineWidth',2);
+    legend('dsize= 32','dsize= 64','dsize= 128');
+    ylabel('Mean of nb of comp in z');
+    xlabel('boundary value');
+    title('Mean of nb of comp to get 99% of z');
+    saveas(gcf,['Sparsity_mean.png']);
+    
+    figure, 
+    plot(BOUNDARY,RES_var(:,1),'LineWidth',2); hold on;
+    plot(BOUNDARY,RES_var(:,2),'LineWidth',2); hold on;
+    plot(BOUNDARY,RES_var(:,3),'LineWidth',2);
+    legend('dsize= 32','dsize= 64','dsize= 128');
+    ylabel('Variance in number of components');
+    xlabel('boundary value');
+    title('var of nb of comp to get 99% of z');
+    saveas(gcf,['Sparsity_variance.png']);
 % dsize= [32 64 128];
 % boundary= [.001 .01 .02];
 % RES_mean= zeros(3,3); RES_var= zeros(3,3);
