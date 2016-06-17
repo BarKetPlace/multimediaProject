@@ -14,7 +14,7 @@ noise_file = 'white_16kHz.wav';
 
 % Choose codebook
 load ../Codebooks.mat
-D=Codebooks{1,2};%
+D=Codebooks{1,1};%
 clear Codebooks;
 [M, dsize]=size(D);
 
@@ -22,14 +22,15 @@ clear Codebooks;
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
-ISIGNAL= [40:50];
-% ISIGNAL=26;
+% ISIGNAL= [40:50];
+ISIGNAL=26;
 sparsity=[];
 t_=[];
 En_=[];
 En_model_=[];
 ifig=1;
 low_value=1e-4;
+
 tic
 for isignal=ISIGNAL
     %   get the signal from database
@@ -63,45 +64,41 @@ for isignal=ISIGNAL
     fprintf('MFCC extraction...');
     
     cd ..
-    %Extract mfcc
-    [cepstrax,Ex,pspectrumx] = melfcc(x, [], Fs, []);
-    [cepstray,Ey,pspectrumy] = melfcc(y, [], Fs, []);
-    [cepstran,En_model,pspectrumn] = melfcc(n, [], Fs, []);
+    %Extract mfcc without denoising, 
+    [~,Ex,pspectrumx] = melfcc(x, [], Fs, []);
+    [~,Ey,pspectrumy] = melfcc(y, [], Fs, []);
+    [~,En_model,pspectrumn] = melfcc(n, [], Fs, []);
     cd signalprocessing
     fprintf('done.\n');
     
-    %Compute power of each frame
+%     Ex, Ey and E_model contains the Mel coefficient for the clean, noisy and noise signal.
+%     We perform the denoising separately
+    
+    %Compute energy of each frame
     mel_py = sum(abs(pspectrumy).^2) ;
-    mel_px = sum(abs(pspectrumx).^2) ;
-    [~,minI]= min(mel_py);% Assumption:: should be zero
+    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%      isolate filter bank energies that correspond to speech signal
+    %%%      isolate mel coefficients that correspond to speech signal
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-    %find the energy threshold by
+    %find the energy threshold
     i=2;
     while mel_py(i)<=2*mel_py(i-1)
         i=i+1;
     end
-    energythresh=max(mel_py(1:i-1));      % threshold for speech/silence decision
-    
-    
-%     energythresh=0; % Used only in plots
-    
-    
+    energythresh=max(mel_py(1:i-1));      % threshold for speech/silence decision 
         
     %Silence frame
     an = mel_py <= energythresh * ones(1, length(mel_py)) ;
-    % En_estimated=Ey(:,an);c
-    En_silence= Ey(:,an);
+
+%     En_silence= Ey(:,an);
     
     %Speech frames
     a = mel_py > energythresh * ones(1, length(mel_py)) ;
     
-    speechmel_py=mel_py(a)/max(abs(mel_py(a)));
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -115,50 +112,53 @@ for isignal=ISIGNAL
 %     En_model_=horzcat(En_model_,En_model);   %Feature of the noise signal
 
 %%
-    nbframe=size(Ey(a),2);                      %Number of processed frame
+    nbframe=size(Ey(:,a),2);                      %Number of speech frames
+    
     
     Ey_speech=Ey(:,a);
     En_speech=En(:,a);
+    
     Ey_sil= Ey(:,an);
     En_sil= En(:,an);
     Ex_sil= Ex(:,an);
     
-    %Denoise silence
+    
+    %Denoise silence by spectral substraction
+    %Find the frame with the lowest energy
+    [~,minI]= min(mel_py);
+    
     Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
-    Ey_sil(Ey_sil<low_value)=low_value;
+    Ey_sil(Ey_sil<low_value)=low_value;% Normalize
     
-    Exhat= zeros(M,size(Ey,2));
+    % Will receive the complete result
+    Exhat= zeros(M, size(Ey,2));
+    
+    %Will only receive the processed speech frames
     Exhat_speech= zeros(M,nbframe);
+    
+    % Will receive the zhat values for all the processed speech frame
     zhat= zeros(dsize, nbframe);
-    
-%     Ey_sil= Ex_sil;
-    %% Find the boundary epsilon
-    %The epsilon boudary is easy to find:
-    %We want epsilon such that ||Ex-Exhat||_2<= epsilon  and
-    %||Ex||_2/||Ex-Exhat||_2 >= SNRtarget in dB
-      
-    
-    SNRtarget=40;%dB
+        
     %% Find zhat s.t. zhat= min_z ||ey- D*z||, subject to D*z>=0
     % zhat=getzhat(D,Ey,K,En);
     
 
-    K_= [13];
-    for iK=1:length(K_)
-        K=K_(iK);
-        boundary=.001;
+%     K_= [13];
+%     for iK=1:length(K_)
+%         K=K_(iK);
+
+        boundary=.01;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
         for iframe = 1:nbframe% Frame by frame processing
 %             fprintf('Frame %d/%d\n',iframe,nbframe);
-            %
+            % Linear coefficient for the processed frame
             zhat_frame= zeros(dsize,1);
             
-            iproblem=1;
+            % MFCCs of the processed frame
             ey=Ey_speech(:,iframe);
-%             en=En_speech(:,iframe);
-%             ex=Ex(:,iframe);
-%%    VERSION 1
+%%    VERSION 1 - SIMPLE CONVEX PROBLEM
+
             cvx_begin quiet
             variable zhat_frame(dsize,1)
             minimize( norm(zhat_frame,1) )
@@ -167,18 +167,19 @@ for isignal=ISIGNAL
                 norm( ey-D*zhat_frame )<=boundary
             cvx_end
             
+            %Unlikely but happen sometimes
             if (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
                 Exhat_speech(:,iframe)= Ey_speech(:,iframe);
-                fprintf('/!\frame %d:: Not solved /!\\n',iframe);
-            else
+                fprintf('frame %d:: Not solved\n',iframe);
+            else% In case the problem is solved
                 Exhat_speech(:,iframe)= D*zhat_frame;
                 zhat(:,iframe)=zhat_frame;
             end
             
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %         K= 7;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%       VERSION 2
+%%       VERSION 2 - IF number of Linear coefficient provided
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % %  K=10;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %             %Initialization
 %             k= 1; I=[]; r=[]; Ip=[]; Iu=[]; index=[]; 
 %             zhat_tmp_storage=[];
@@ -250,24 +251,22 @@ for isignal=ISIGNAL
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        %
+        % 
         Exhat(:,a)= Exhat_speech;
         Exhat(:,an)= Ey_sil;
         
         
-        
+% Find the sparsity of the vector
         PrincipalCompNb= zeros(1,nbframe);
         for iframe = 1:nbframe
             [~, ~, PrincipalCompNb(1,iframe) ] = getPrincipalComp(zhat(:,iframe), .99);
         end
         sparsity=horzcat(sparsity,PrincipalCompNb);
         
-        %         err_ratio(iK)= norm(Ex(:) - Exhat(:),2)/norm(En(:),2);
-        MSE(iK)= norm(Ex(:)-Exhat(:));
+        MSE= norm(Ex(:)-Exhat(:));
         
     end%  End isignal=ISIGNAL
  
-end%  End variation of K
 toc
 %% PLOTS
 % figure(ifig),  ifig=ifig+1;

@@ -13,7 +13,7 @@ vector_=zeros(length(vector),1);
 totenergy= sum(vector.^2);
 cumenergy= cumsum(vector(index).^2)./totenergy;
 %The diffenergy is typicaly negative in the begining and then turns
-%negative. The change in sign means that the energy becomes greater than
+%positiv. The change in sign means that the energy becomes greater than
 %the threshold
 diffenergy = cumenergy-energyperc;
 

@@ -1,0 +1,142 @@
+\documentclass[a4paper]{report}
+
+\usepackage[utf8]{inputenc} %Accent
+%\usepackage{libertine} %Font
+\usepackage[english]{babel} %langue
+
+\usepackage{graphicx} %Include fig
+\usepackage{caption} %center the caption
+\usepackage{subfig} %Include subfig
+\usepackage{lastpage} %ref LastPage 
+\usepackage{fancyhdr} % headers,footers
+\usepackage{multicol} % minipages
+\usepackage{textcomp} 
+\usepackage{lscape}   %Format paysage
+\usepackage{fancybox} %Image arrière plan
+\usepackage{amsmath} %\mathbb, \mathit...
+\usepackage{amssymb} 
+\usepackage{color} %couleurs
+\usepackage{float}
+\usepackage[hidelinks]{hyperref} %Liens intradoc et url
+\usepackage{titlepic}
+\usepackage{tikz} 
+%\usepakcage{algorithm}
+%\usepackage{algorithmic} %Algo en pseudo code
+%\usepackage{algorithm2e} %for psuedo code
+
+%\usepackage{boxedminipage} %Surligner
+
+%\newcounter{apppage} % Annexes
+
+%Dossier contenant les figures
+\graphicspath{{figures/}}
+
+%Mise en page
+\voffset -1.5 cm
+\textheight 24.3 cm
+\topmargin 0 cm
+\headheight 0 cm
+%\headsep 0.6 cm
+\textwidth 16.5 cm
+\evensidemargin 0 cm
+\marginparsep 0 cm
+\marginparwidth 0 cm
+\oddsidemargin -.5 cm
+
+
+%Type de numérotation des sections & sous-sections
+\renewcommand{\thesection}{\Roman{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+
+%\renewcommand\thesubfigure{(\alph{subfigure})}
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\newcommand{\hsp}{\hspace{20pt}}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+%email
+\newcommand{\email}[1]{\href{mailto:#1}{\color{blue} \textsf{#1}}}
+
+%Bibliography
+\bibliographystyle{apalike}
+
+%Environnement insersion image
+\newcommand{\img}[3]{\begin{figure}[!h] \centering \includegraphics[scale=#2]{#1}\captionsetup{justification=centering} \caption{#3} \label{#1} \end{figure}}
+  % commande \img{nom image}{scale}{legende}
+
+%TODO
+\newcommand{\todo}[1]{{ \Large \textbf{ \colorbox{yellow}{\color{blue} TODO:}}~#1}}
+
+%pushright
+\newenvironment{pushright}[1]{\textbf{#1}
+\begin{itemize}\item[\hspace{12pt}]}{\end{itemize}
+}
+
+\pagestyle{fancy}  % Activation en-tête et pied de page
+
+%En-tête
+\fancyhead[L]{}
+%\fancyhead[C]{}
+%\fancyhead[R]{}
+% Pied de page
+\newcommand{\width}{3cm}
+%\fancyfoot[L]{ \includegraphics[width=\width]{logo-gipsa} }
+\fancyfoot[C]{ \thepage~/~\pageref{LastPage} }
+%\fancyfoot[R]{ \includegraphics[width=\width]{logo-phelma} }
+
+%\titlepic{\includegraphics[scale=0.6]{kth-logo}}
+
+
+
+
+
+
+
+%Titre
+%\title{Speech Signal Processing\\Report\\Project n°2}
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height 
+%\title{Final Report}
+
+\title{	 
+\textsc{EQ2442\\Project Course on Multimedia Signal Processing}\\[25pt] 
+\horrule{1pt} \\[0.4cm] % Thin top horizontal rule
+\huge {Denoising of MFCCs for better ASR performances} \\[0.4 cm] % The assignment title
+\Large{Supervisor: Saikat Chaterjee}\\[0.4 cm]
+\horrule{2pt} \\[0.2cm] % Thick bottom horizontal rule
+}
+
+\author{Antoine Honoré\\ \email{honore@kth.se} \and Félix Côte\\\email{fcote@kth.se} \and Supervisor}
+
+\begin{document}
+%%%%%%%%%%%%%%%% TITLE %%%%%%%%%%%%%%%%
+\maketitle
+\tableofcontents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Introduction}
+The following document is the final report of a two months project, carried by two master student in signal processing. The goal of this project was to improve the performance of an Automatic Speech Recognition (ASR) by performing a low level denoising on the features extracted from  a speech signal. These features are known as the Mel-Frequency Cepstral Coefficients (MFCCs) and are computed for every frame of a speech signal. These MFCCs are then used as input to train, and to test a SR system. The kick off idea was that, the MFCCs of a frame can be expressed as a linear combination of MFCCs from some other frames. In this report, we will discuss this assumption and try to build a denoising scheme to improve the performance of the SR system.
+\section{Background}
+\subsection{Feature extraction}
+In the case of speech processing, the feature extraction process is not very complicated and is as follow:
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale= .3]{feature_extraction}
+\end{figure}
+The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in R^N$ this vector. Here N = 26.
+
+\subsection{Pattern recognition}
+To test our denoising scheme, we used kaldi, a free and open-source sofware. Kaldi is an implementation of all the tools that we need to compute MFCCs, train and test a pattern recognition model. Here we chose to drop the MFCCs computation implemented in Kaldi and created our own implemented with Matlab. The pattern recognition system that we used is based on Hidden Markov Model and the probability distribution of the states are modeled with GMM.
+
+\subsection{Database}
+We used the TIMIT database to train and test our system. The kaldi implementation provides testing example on different databases and TIMIT is one of them. We therefore had access the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
+
+\section{Denoising scheme}
+
+\section{Results}
+\subsection{additivity}
+
+
+
+\end{document}
+%%% Local Variables:
+%%% TeX-master: "master"
+%%% End:
