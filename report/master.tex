@@ -87,7 +87,8 @@
 %\titlepic{\includegraphics[scale=0.6]{kth-logo}}
 
 
-
+%LOCAL SHORTCUTS
+\newcommand{\ehat}{\hat{\textbf{e}}}
 
 
 
@@ -120,19 +121,28 @@ In the case of speech processing, the feature extraction process is not very com
 \begin{figure}[!ht]
 \centering
 \includegraphics[scale= .3]{feature_extraction}
+\caption{MFCCs extraction block diagram}
+\label{feature_extraction}
 \end{figure}
-The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in R^N$ this vector. Here N = 26.
+The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in R^N$ this vector. Here M = 26.
 
-\subsection{Pattern recognition}
+\subsection{Pattern recognition with kaldi}
 To test our denoising scheme, we used kaldi, a free and open-source sofware. Kaldi is an implementation of all the tools that we need to compute MFCCs, train and test a pattern recognition model. Here we chose to drop the MFCCs computation implemented in Kaldi and created our own implemented with Matlab. The pattern recognition system that we used is based on Hidden Markov Model and the probability distribution of the states are modeled with GMM.
 
 \subsection{Database}
 We used the TIMIT database to train and test our system. The kaldi implementation provides testing example on different databases and TIMIT is one of them. We therefore had access the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
 
 \section{Denoising scheme}
+The idea is to reduce the dimension of \textbf{e} and find a vector
+$\ehat = \sum_{i=1}^N\textbf{d}_iz_i$ . Here, $\textbf{d}_i$ is the ith column of a fat matrix D and is used as a codebook. To reduce the dimension, \textbf{z} has have strictly less than M non-zero coefficients.
+
+\subsection{Computation of a codebook D}
+
+\subsection{Sparse vector}
+
 
 \section{Results}
-\subsection{additivity}
+\subsection{Additivity}
 
 
 

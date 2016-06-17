@@ -22,8 +22,8 @@ clear Codebooks;
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
-% ISIGNAL= [40:50];
-ISIGNAL=26;
+ISIGNAL= [40:55];
+% ISIGNAL=26;
 sparsity=[];
 t_=[];
 En_=[];
@@ -38,7 +38,7 @@ for isignal=ISIGNAL
     
     %   Keep the speech parts of the signal
 %     x=x(DATA.speechframes{isignal});
-        
+
     %extract the right noise length
     noise_sig = Noise(1:length(x))';
     
@@ -282,7 +282,7 @@ plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
 
 figure(ifig), clf;  ifig=ifig+1;
 histogram(sparsity)%,round(nbframe/2));
-title({['Number of components representing .99% of energy in ' num2str(length(sparsity)) ' zhat vectors']});%['epsilon= ' num2str(epsilon)]});
+title({['Nb of comp to get .99% of energy'];['dsize=' num2str(dsize)];['bound= ' num2str(boundary)]});
 xlabel('Number of components');
 % 
 figure(ifig), clf;  ifig=ifig+1;
