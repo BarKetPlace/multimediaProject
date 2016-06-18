@@ -16,7 +16,7 @@ D=[];
 %Load Dictionnary in case of denoising
 if denoise_flag
     load Codebooks.mat
-    D = Codebooks{1,1}; %We arbitrarly choose a dictionary
+    D = Codebooks{1,2}; %We arbitrarly choose a dictionary
 %     D=D./(ones(size(D,1),1)*sqrt(sum(D.^2)));
 end
    
@@ -51,12 +51,12 @@ for ifile = 1:NbFiles
         y = x + n;
         y=y(:);
         
-        %First off we process the clean signal
+        %First we process the clean signal
         [~,Ex,pspectrum] = melfcc(x,[],Fs,[]);
         %Then the noisy signal
         [~,Ey,pspectrum] = melfcc(y,[],Fs,[]);
         
-        %Then we use the noise's features to denoise the
+        %Then we use the noise's features to denoise
         [cepstra,aspectrum,pspectrum] = melfcc(y,Ey-Ex,Fs,D);
     else %if snr==-1 (no additive noise)
         y=x;

@@ -174,14 +174,17 @@ However, $\ell^0-norm$ is a pseudo-norm, hence the problem is consider not tract
  is often a good approximation of the solution of problem \ref{l0}. Problem \ref{l1} is convex and is therefore easier and faster to solve.\\
 Ideally $\eta = 0$. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our problem, we do not want any of the approximated mel coefficients to be zero, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
 %Let define $\zhat$ as the solution of problem \ref{l1}.
+The solver we used is CVX\footnote{CVX documentation: http://web.cvxr.com/cvx/doc/}.\\
 
+With the CVX syntax, the problem is:
+\img{convex_problem}{.8}{Convex problem with CVX syntax\\low\_value=$\eta$, boundary=$\epsilon$}
 
 \section{Results}
 \subsection{Additivity hypothesis}
 
 \subsection{Reducing the dimension}
 
-\subsection{Increase kaldi performances}
+\subsection{Increase Kaldi performances}
 
 \bibliography{bibtex}
 \end{document}

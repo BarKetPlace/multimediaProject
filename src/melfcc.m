@@ -128,33 +128,34 @@ if ~isempty(D)
     
 %     Ey_sil= Ex_sil;
     nbframe= size(Ey_speech,2);
-    boundary=.01;
+    boundary=.1;
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
         for iframe = 1:nbframe% Frame by frame processing
             ey= Ey_speech(:,iframe);
-%             fprintf('Frame %d/%d\n',iframe,nbframe);
+            %             fprintf('Frame %d/%d\n',iframe,nbframe);
             %
             zhat_frame= zeros(dsize,1);
-                        cvx_begin quiet
-            variable zhat_frame(dsize,1)
-            minimize( norm(zhat_frame,1) )
-            subject to
-                D*zhat_frame >= low_value
-                norm( ey-D*zhat_frame ) <= boundary
+            
+            cvx_begin quiet
+                variable zhat_frame(dsize,1)
+                minimize( norm(zhat_frame,1) )
+                subject to
+                    D*zhat_frame >= low_value
+                    norm( ey-D*zhat_frame ) <= boundary
             cvx_end
             
             if (~( strcmp(cvx_status,'Solved') || strcmp(cvx_status,'Inaccurate/Solved')) )
                 Exhat_speech(:,iframe)= Ey_speech(:,iframe);
                 fprintf('/!\frame %d:: Not solved /!\\n',iframe);
-
+                
             else
                 Exhat_speech(:,iframe)= D*zhat_frame;
                 zhat(:,iframe)=zhat_frame;
             end
             
-%             figure, plot(ey); hold on; plot(D*zhat_frame);
+            %             figure, plot(ey); hold on; plot(D*zhat_frame);
         end%   End Frame by frame processing
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
