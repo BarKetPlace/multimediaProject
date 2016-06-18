@@ -31,8 +31,8 @@ D= Codebooks{1,idsize};%
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
-% ISIGNAL= [40:55];
-ISIGNAL=47;
+ISIGNAL= [40:55];
+% ISIGNAL=47;
 sparsity=[];
 t_=[];
 En_=[];
