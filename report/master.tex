@@ -28,6 +28,7 @@
 
 %\newcounter{apppage} % Annexes
 
+
 %Dossier contenant les figures
 \graphicspath{{figures/}}
 
@@ -92,7 +93,7 @@
 \newcommand{\ey}{\textbf{e}_y}
 \newcommand{\ex}{\textbf{e}_x}
 \newcommand{\en}{\textbf{e}_n}
-\newcommand{\exhat}{ \hat{\textbf{e}} }
+\newcommand{\exhat}{ \hat{\textbf{e}}_x }
 \newcommand{\zhat}{ \hat{\textbf{z}} }
 
 
@@ -105,7 +106,7 @@
 \textsc{EQ2442\\Project Course on Multimedia Signal Processing}\\[25pt] 
 \horrule{1pt} \\[0.4cm] % Thin top horizontal rule
 \huge {Denoising of MFCCs for better ASR performances} \\[0.4 cm] % The assignment title
-\Large{Supervisor: Saikat Chaterjee}\\[0.4 cm]
+\Large{Supervisor: Saikat Chatterjee}\\[0.4 cm]
 \horrule{2pt} \\[0.2cm] % Thick bottom horizontal rule
 }
 
@@ -135,7 +136,7 @@ To test our denoising scheme, we used kaldi, a free and open-source sofware. Kal
 \subsection{Database}
 We used the TIMIT database to train and test our system. The kaldi implementation provides testing example on different databases and TIMIT is one of them. We therefore had access the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
 
-\section{Denoising scheme}
+\section{Denoising algorithm}
 The idea is to reduce the dimension of \textbf{e} and find a vector $\ehat = \sum_{i=1}^N\textbf{d}_iz_i$ . Here, $\textbf{d}_i$ is the ith column of a fat matrix D and is used as a codebook. To reduce the dimension, \textbf{z} has have strictly less than M non-zero coefficients.
 We denote by x the clean speech signal, n the additive noise and y = x + n, the noisy signal. 
 First we assume that the additivity holds up to the mel coefficients, $\ey= \ex + \en$.\\
@@ -172,19 +173,33 @@ However, $\ell^0-norm$ is a pseudo-norm, hence the problem is consider not tract
 \label{l1}
 \end{equation}
  is often a good approximation of the solution of problem \ref{l0}. Problem \ref{l1} is convex and is therefore easier and faster to solve.\\
-Ideally $\eta = 0$. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our problem, we do not want any of the approximated mel coefficients to be zero, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
+Ideally $\eta = 0$. However, for (\ref{l1}) to remain a convex optimization problem, the inequality constraint must not be strict. In our case, we want the approximated mel coefficients to be strictly positive, therefore we chose $\eta = 10^{-4}$. This value represents the lower value that the mel coefficients can now take.
 %Let define $\zhat$ as the solution of problem \ref{l1}.
 The solver we used is CVX\footnote{CVX documentation: http://web.cvxr.com/cvx/doc/}.\\
 
-With the CVX syntax, the problem is:
-\img{convex_problem}{.8}{Convex problem with CVX syntax\\low\_value=$\eta$, boundary=$\epsilon$}
+With the CVX syntax, the problem looks like this:
+\img{convex_problem}{.8}{Convex problem with CVX syntax}
 
 \section{Results}
 \subsection{Additivity hypothesis}
 
 \subsection{Reducing the dimension}
 
-\subsection{Increase Kaldi performances}
+\subsection{Kaldi performances}
+First we need to separate two types of frames:\begin{enumerate}
+\item the speech frames (high energy) containing the information;
+\item the silence frames (low energy) containing  noise.
+\end{enumerate}
+The silent frames come from a pure white noise signal, hence the mel coefficients of these frames are also random variables. 
+As figure \ref{kaldiperformances} shows, the denoising algorithm does not improve kaldi's performances.
+\img{kaldiperformances}{.5}{Plot of kaldi performances versus value of $\epsilon$}
+
+We observe that we do not manage to fit $\ex$ by allowing $||\ey-\exhat||_2$ to become large.
+Here are some suggestion of improvement:
+\begin{itemize}
+\item[o] The problem could be ill-posed, instead we could use the dictionnary with the actual amplitude of the mel coefficients in the training set. take a very large dictionnary and try to fit one of them.
+\item[o]
+\end{itemize}
 
 \bibliography{bibtex}
 \end{document}

@@ -15,11 +15,13 @@ noise_file = 'white_16kHz.wav';
 % Choose codebook
 load ../Codebooks.mat
 
-BOUNDARY= [.001 .005 .01 .05 .1];
+EPSILON= [.001 .005 .01 .05 .1];
 DSIZE= 1:3;
-for iboundary=1:length(BOUNDARY)
-    boundary= BOUNDARY(iboundary);
-for idsize=1:3
+% for iepsilon=1:length(EPSILON)
+    for iepsilon=3
+    epsilon= EPSILON(iepsilon);
+% for idsize=1:3
+    for idsize=2
     
 D= Codebooks{1,idsize};%
 % clear Codebooks;
@@ -29,14 +31,14 @@ D= Codebooks{1,idsize};%
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
-ISIGNAL= [40:55];
-% ISIGNAL=26;
+% ISIGNAL= [40:55];
+ISIGNAL=47;
 sparsity=[];
 t_=[];
 En_=[];
 En_model_=[];
 ifig=1;
-low_value=1e-4;
+eta=1e-4;
 
 tic
 for isignal=ISIGNAL
@@ -135,7 +137,7 @@ for isignal=ISIGNAL
     [~,minI]= min(mel_py);
     
     Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
-    Ey_sil(Ey_sil<low_value)=low_value;% Normalize
+    Ey_sil(Ey_sil<eta)=eta;% Normalize
     
     % Will receive the complete result
     Exhat= zeros(M, size(Ey,2));
@@ -170,8 +172,8 @@ for isignal=ISIGNAL
             variable zhat_frame(dsize,1)
             minimize( norm(zhat_frame,1) )
             subject to
-                D*zhat_frame>=low_value
-                norm( ey-D*zhat_frame )<=boundary
+                D*zhat_frame >= eta
+                norm( ey-D*zhat_frame ) <= epsilon
             cvx_end
             
             %Unlikely but happen sometimes
@@ -237,7 +239,7 @@ for isignal=ISIGNAL
 %                 zhat_tmp_storage(:,k)= zhat_tmp;
 %                 
 %                 
-%                 if  ( norm(r(:,k)) <= boundary )
+%                 if  ( norm(r(:,k)) <= epsilon )
 %                     %         k= k - 1;
 %                     Ihat= I(:,k);
 %                     break;
@@ -270,9 +272,9 @@ for isignal=ISIGNAL
         end
         sparsity=horzcat(sparsity,PrincipalCompNb);
         %Save sparsity results
-        RES_mean(iboundary,idsize)= mean(sparsity);
-        RES_var(iboundary,idsize)= var(sparsity);
-        save('RES.mat','RES_mean','RES_var', 'BOUNDARY', 'DSIZE');
+        RES_mean(iepsilon,idsize)= mean(sparsity);
+        RES_var(iepsilon,idsize)= var(sparsity);
+        save('RES.mat','RES_mean','RES_var', 'EPSILON', 'DSIZE');
         
 %         MSE= norm(Ex(:)-Exhat(:));
         
@@ -294,38 +296,56 @@ plotMFCC(ifig,Ex,Ey,Exhat); ifig=ifig+1;
 figure(ifig), clf;  ifig=ifig+1;
 histogram(sparsity)%,round(nbframe/2));
 title({['Nb of comp to get .99% of energy'];...
-        ['dsize=' num2str(dsize) ', bound= ' num2str(boundary)];...
+        ['dsize=' num2str(dsize) ', bound= ' num2str(epsilon)];...
         ['mean= ' num2str(mean(sparsity)) ', var= ' num2str(var(sparsity))]});
 xlabel('Number of components');
-saveas(gcf,['sparsity_dsize' num2str(dsize) '_bound' num2str(boundary) '.png']);
+saveas(gcf,['sparsity_dsize' num2str(dsize) '_bound' num2str(epsilon) '.png']);
 
 end%End dsize
 end
 figure(ifig), clf;  ifig=ifig+1;
 plot(mel_py,'LineWidth',2); hold on;
 plot([1 length(mel_py)],energythresh*[1 1])%soundsc(x,Fs)
+%% Kaldi results
+WER= [74.5 75.3 76.2 77.9 79.0];
+WER_BOUND= [.001 .01 .02 .05 .1];
+NoProcessing= 80.5;
+SilentProcessingPerf= 74.4;
+CleanTestData= 56.3;
+figure,
+    plot(WER_BOUND, NoProcessing*ones(1,length(WER_BOUND)),'LineWidth',2,'Color','red'); hold on;
+    plot(WER_BOUND, WER,'Marker','o','MarkerFaceColor','blue','Color','blue'); hold on;
+    plot(WER_BOUND, SilentProcessingPerf*ones(1,length(WER_BOUND)),'LineWidth',2); hold on;
+%     plot(WER_BOUND, CleanTestData*ones(1,length(WER_BOUND)),'LineWidth',2);
+    
+    legend('No processing','Silence + Speech frames','Only Silence frames');
+    title({'Kaldi performances';'Noisy test data 10dB'});
+    xlabel('Value of \epsilon');
+    ylabel('WER (%)');
+
 %%
+
 figure, 
-    plot(BOUNDARY,RES_mean(:,1),'LineWidth',2); hold on;
-    plot(BOUNDARY,RES_mean(:,2),'LineWidth',2); hold on;
-    plot(BOUNDARY,RES_mean(:,3),'LineWidth',2);
+    plot(EPSILON,RES_mean(:,1),'LineWidth',2); hold on;
+    plot(EPSILON,RES_mean(:,2),'LineWidth',2); hold on;
+    plot(EPSILON,RES_mean(:,3),'LineWidth',2);
     legend('dsize= 32','dsize= 64','dsize= 128');
     ylabel('Mean of nb of comp in z');
-    xlabel('boundary value');
+    xlabel('epsilon value');
     title('Mean of nb of comp to get 99% of z');
     saveas(gcf,['Sparsity_mean.png']);
     
     figure, 
-    plot(BOUNDARY,RES_var(:,1),'LineWidth',2); hold on;
-    plot(BOUNDARY,RES_var(:,2),'LineWidth',2); hold on;
-    plot(BOUNDARY,RES_var(:,3),'LineWidth',2);
+    plot(EPSILON,RES_var(:,1),'LineWidth',2); hold on;
+    plot(EPSILON,RES_var(:,2),'LineWidth',2); hold on;
+    plot(EPSILON,RES_var(:,3),'LineWidth',2);
     legend('dsize= 32','dsize= 64','dsize= 128');
     ylabel('Variance in number of components');
-    xlabel('boundary value');
+    xlabel('epsilon value');
     title('var of nb of comp to get 99% of z');
     saveas(gcf,['Sparsity_variance.png']);
 % dsize= [32 64 128];
-% boundary= [.001 .01 .02];
+% epsilon= [.001 .01 .02];
 % RES_mean= zeros(3,3); RES_var= zeros(3,3);
 % RES_mean(1,:)= [14.3242 9.7896 8.1717]
 
