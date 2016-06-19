@@ -20,7 +20,7 @@
 \usepackage[hidelinks]{hyperref} %Liens intradoc et url
 \usepackage{titlepic}
 \usepackage{tikz} 
-%\usepakcage{algorithm}
+%\usepackage{algorithm}
 %\usepackage{algorithmic} %Algo en pseudo code
 %\usepackage{algorithm2e} %for psuedo code
 
@@ -95,7 +95,7 @@
 \newcommand{\en}{\textbf{e}_n}
 \newcommand{\exhat}{ \hat{\textbf{e}}_x }
 \newcommand{\zhat}{ \hat{\textbf{z}} }
-
+\newcommand{\scale}{0.4}
 
 %Titre
 %\title{Speech Signal Processing\\Report\\Project n°2}
@@ -127,14 +127,15 @@ In the case of speech processing, the feature extraction process is not very com
 \includegraphics[scale= .3]{feature_extraction}
 \caption{MFCCs extraction block diagram}
 \label{feature_extraction}
-\end{figure}
-The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in R^M$ this vector. Here M = 26.
+
+\end{figure}\\
+The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in \mathbb{R}^M$ this vector. Here M = 26.
 
 \subsection{Pattern recognition with kaldi}
 To test our denoising scheme, we used kaldi, a free and open-source sofware. Kaldi is an implementation of all the tools that we need to compute MFCCs, train and test a pattern recognition model. Here we chose to drop the MFCCs computation implemented in Kaldi and created our own implemented with Matlab. The pattern recognition system that we used is based on Hidden Markov Model and the probability distribution of the states are modeled with GMM.
 
 \subsection{Database}
-We used the TIMIT database to train and test our system. The kaldi implementation provides testing example on different databases and TIMIT is one of them. We therefore had access the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
+We used the TIMIT database to train and test our system. The kaldi implementation provides testing examples on different databases and TIMIT is one of them. We therefore had access to the implementation of the scoring process using the TIMIT database and that saved us a lot of time.
 
 \section{Denoising algorithm}
 The idea is to reduce the dimension of \textbf{e} and find a vector $\ehat = \sum_{i=1}^N\textbf{d}_iz_i$ . Here, $\textbf{d}_i$ is the ith column of a fat matrix D and is used as a codebook. To reduce the dimension, \textbf{z} has have strictly less than M non-zero coefficients.
@@ -184,8 +185,29 @@ Ideally $\eta = 0$. However, for (\ref{l1}) to remain a convex optimization prob
 The solver we used is CVX\footnote{CVX documentation: http://web.cvxr.com/cvx/doc/}.\\
 
 With the CVX syntax, the problem looks like this:
-\img{convex_problem}{.8}{Convex problem with CVX syntax}
+\img{convex_problem}{.7}{Convex problem with CVX syntax}
 
+
+\subsection{Silence frames}
+We need to separate two types of frames:\begin{enumerate}
+\item the speech frames (high energy) containing the information;
+\item the silence frames (low energy) containing  noise. \end{enumerate}
+
+There is a big difference of structure between these frames and hence it is not possible to process them the same way.
+On figure \ref{speechMC} and \ref{silMC} we see the difference  between two speech and two silence frames.
+
+\begin{figure}[!ht]
+\subfloat[Mel coefficients of a speech frame]{\includegraphics[scale=.38]{speechframeMC}\label{speechMC}}
+\subfloat[Mel coefficients of a silence frame. Here we did not process the silence so $\exhat=\ey$]{\includegraphics[scale=.38]{silenceframeMC}\label{silMC}}\\
+\caption{Difference between speech \& silence frames.}
+\end{figure}
+
+An  easy, cheap and efficient solution that we found to process the silence frame is to use a simple spectral substraction.
+Since this part of the denoising algorithm was not really a part of the project I won't say more but the result can be seen on figure \ref{kaldiperformances}.
+
+
+
+\pagebreak
 \section{Results}
 \subsection{Additivity hypothesis}
 This hypothesis is probably the most needed since we base our denoising operation on it. It states that the additivity of the noise in the time domain still holds in the mel coefficients domain.
@@ -193,22 +215,37 @@ This means that if we compute the MFCC on a noisy speech frame y = x + n, with x
 To verify this hypothesis 
 
 \subsection{Reducing the dimension}
+The figure \ref{histogram} shows a measure of the sparsity of $\zhat$.
+
+\begin{figure}[!ht]
+\centering
+     \subfloat[$\epsilon=0.001$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_001}\label{b0.001}}
+     \subfloat[$\epsilon=0.005$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_005}\label{b0.005}}\\
+     \subfloat[$\epsilon=0.01$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_01}\label{b0.01}}
+     \subfloat[$\epsilon=0.02$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_02}\label{b0.02}}\\
+     \subfloat[$\epsilon=0.05$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_05}\label{b0.05}}
+     \subfloat[$\epsilon=0.1$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_1}\label{b0.1}}\\
+     \caption{Number of components necessary to represent 99\% of the energy of $\zhat$. There is one $\zhat$ for every frame and we processed $\approx$ 1500 frames. Here $\zhat \in \mathbb{R}^{64}$}
+     \label{histogram}
+\end{figure}
+Figure \ref{sparseparam} shows the evolution of the mean of the variance of the histogram of figure \ref{histogram} when we vary $\epsilon$. We computed these two curves (mean and variance) for different sizes of the dictionnary. 
+
+\begin{figure}[!ht]
+\centering
+\subfloat[]{\includegraphics[scale=\scale]{sparsity_mean}\label{sparsemean}}
+\subfloat[]{\includegraphics[scale=\scale]{sparsity_variance} \label{sparsevar} }
+\caption{}
+\label{sparseparam}
+\end{figure}
 
 \subsection{Kaldi performances}
-First we need to separate two types of frames:\begin{enumerate}
-\item the speech frames (high energy) containing the information;
-\item the silence frames (low energy) containing  noise.
-\end{enumerate}
-The silent frames come from a pure white noise signal, hence the mel coefficients of these frames are also random variables. 
+
+
 As figure \ref{kaldiperformances} shows, the denoising algorithm does not improve kaldi's performances.
-\img{kaldiperformances}{.5}{Plot of kaldi performances versus value of $\epsilon$}
+\img{kaldiperformances}{.5}{Plot of kaldi performances versus value of $\epsilon$ for different kinds of processing.}
 
 We observe that we do not manage to fit $\ex$ by allowing $||\ey-\exhat||_2$ to become large.
-Here are some suggestion of improvement:
-\begin{itemize}
-\item[o] The problem could be ill-posed, instead we could use the dictionnary with the actual amplitude of the mel coefficients in the training set. take a very large dictionnary and try to fit one of them.
-\item[o]
-\end{itemize}
+
 
 \bibliography{master}
 \end{document}

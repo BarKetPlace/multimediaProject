@@ -78,9 +78,9 @@ if (usecmp)
   aspectrum = postaud(aspectrum, maxfreq, fbtype, broaden);
 end
 
-%  Normalization of lower value
-low_value= 1e-4;
-aspectrum(aspectrum<low_value)= low_value;
+% %  Normalization of lower value
+% low_value= 1e-4;
+% aspectrum(aspectrum<low_value)= low_value;
 
 
 
