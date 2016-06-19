@@ -8,7 +8,7 @@ plot(Ey(:),'LineWidth',2); hold on;
 plot(Ex(:),'LineWidth',2); hold on;
 plot(Exhat(:));hold on;
 legend('Frames','Ey','Ex','Exhat');
-xlabel('Mel space coefficent');
+xlabel('Frame number');
 ylabel('Value f coefficient');
 set(gca,'Xtick',[round(M/2):M:length(Ex(:))]);
 set(gca,'XtickLabel',[1:nbframe]);

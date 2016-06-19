@@ -31,8 +31,8 @@ D= Codebooks{1,idsize};%
 %Choose data
 load ../dataTest.mat
 % ISIGNAL= [round((length(DATA.rawSpeech)-1)*rand(1,20))+1];
-ISIGNAL= [40:55];
-% ISIGNAL=47;
+% ISIGNAL= [40:55];
+ISIGNAL=47;
 sparsity=[];
 t_=[];
 En_=[];
@@ -136,8 +136,8 @@ for isignal=ISIGNAL
     %Find the frame with the lowest energy
     [~,minI]= min(mel_py);
     
-    Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
-    Ey_sil(Ey_sil<eta)=eta;% Normalize
+%     Ey_sil= Ey_sil- mean(Ey(:,minI)); %*ones(1,nbframe);
+%     Ey_sil(Ey_sil<eta)=eta;% Normalize
     
     % Will receive the complete result
     Exhat= zeros(M, size(Ey,2));
@@ -299,7 +299,7 @@ title({['Nb of comp to get .99% of energy'];...
         ['dsize=' num2str(dsize) ', bound= ' num2str(epsilon)];...
         ['mean= ' num2str(mean(sparsity)) ', var= ' num2str(var(sparsity))]});
 xlabel('Number of components');
-saveas(gcf,['sparsity_dsize' num2str(dsize) '_bound' num2str(epsilon) '.png']);
+% saveas(gcf,['sparsity_dsize' num2str(dsize) '_bound' num2str(epsilon) '.png']);
 
 end%End dsize
 end
@@ -333,7 +333,7 @@ figure,
     ylabel('Mean of nb of comp in z');
     xlabel('epsilon value');
     title('Mean of nb of comp to get 99% of z');
-    saveas(gcf,['Sparsity_mean.png']);
+%     saveas(gcf,['Sparsity_mean.png']);
     
     figure, 
     plot(EPSILON,RES_var(:,1),'LineWidth',2); hold on;
@@ -343,7 +343,7 @@ figure,
     ylabel('Variance in number of components');
     xlabel('epsilon value');
     title('var of nb of comp to get 99% of z');
-    saveas(gcf,['Sparsity_variance.png']);
+%     saveas(gcf,['Sparsity_variance.png']);
 % dsize= [32 64 128];
 % epsilon= [.001 .01 .02];
 % RES_mean= zeros(3,3); RES_var= zeros(3,3);
