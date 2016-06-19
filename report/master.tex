@@ -195,7 +195,7 @@ On figure \ref{speechMC} and \ref{silMC} we see the difference  between two spee
 \caption{Difference between speech \& silence frames.}
 \end{figure}
 
-The easy, cheap and efficient solution that we found to process the silence frame is to use a simple spectral substraction.
+An  easy, cheap and efficient solution that we found to process the silence frame is to use a simple spectral substraction.
 Since this part of the denoising algorithm was not really a part of the project I won't say more but the result can be seen on figure \ref{kaldiperformances}.
 
 
@@ -208,28 +208,33 @@ Since this part of the denoising algorithm was not really a part of the project 
 
 \begin{figure}[!ht]
 \centering
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_001}\label{b0.001}}
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_005}\label{b0.005}}\\
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_01}\label{b0.001}}
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_02}\label{b0.005}}\\
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_05}\label{b0.001}}
-     \subfloat[a]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_1}\label{b0.005}}\\
-     \caption{Comparison of steady state results (a) x method (b) y method}
-     \label{steady_state}
+     \subfloat[$\epsilon=0.001$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_001}\label{b0.001}}
+     \subfloat[$\epsilon=0.005$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_005}\label{b0.005}}\\
+     \subfloat[$\epsilon=0.01$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_01}\label{b0.01}}
+     \subfloat[$\epsilon=0.02$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_02}\label{b0.02}}\\
+     \subfloat[$\epsilon=0.05$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_05}\label{b0.05}}
+     \subfloat[$\epsilon=0.1$]{\includegraphics[scale=\scale]{sparsity_dsize64_bound0_1}\label{b0.1}}\\
+     \caption{Number of components necessary to represent 99\% of the energy of $\zhat$. There is one $\zhat$ for every frame and we processed $\approx$ 1500 frames. Here $\zhat \in \mathbb{R}^{64}$}
+     \label{histogram}
+\end{figure}
+Figure \ref{sparseparam} shows the evolution of the mean of the variance of the histogram of figure \ref{histogram} when we vary $\epsilon$. We computed these two curves (mean and variance) for different sizes of the dictionnary. 
+
+\begin{figure}[!ht]
+\centering
+\subfloat[]{\includegraphics[scale=\scale]{sparsity_mean}\label{sparsemean}}
+\subfloat[]{\includegraphics[scale=\scale]{sparsity_variance} \label{sparsevar} }
+\caption{}
+\label{sparseparam}
 \end{figure}
 
 \subsection{Kaldi performances}
 
 
 As figure \ref{kaldiperformances} shows, the denoising algorithm does not improve kaldi's performances.
-\img{kaldiperformances}{.5}{Plot of kaldi performances versus value of $\epsilon$ for different kind of processing.}
+\img{kaldiperformances}{.5}{Plot of kaldi performances versus value of $\epsilon$ for different kinds of processing.}
 
 We observe that we do not manage to fit $\ex$ by allowing $||\ey-\exhat||_2$ to become large.
-Here are some suggestion of improvement:
-\begin{itemize}
-\item[o] The problem could be ill-posed, instead we could use the dictionnary with the actual amplitude of the mel coefficients in the training set. take a very large dictionnary and try to fit one of them.
-\item[o]
-\end{itemize}
+
 
 \bibliography{bibtex}
 \end{document}
