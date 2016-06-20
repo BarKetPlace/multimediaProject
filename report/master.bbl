@@ -5,4 +5,10 @@ Arthur, D. and Vassilvitskii, S. (2007).
 \newblock k-means++: The advantages of careful seeding.
 \newblock pages 1027--1035.
 
+\bibitem[Donoho, 2006]{equivalencel1l0}
+Donoho, D.~L. (2006).
+\newblock For most large underdetermined systems of linear equations the
+  minimal l1-norm solution is also the sparsest solution.
+\newblock {\em Communications on Pure and Applied Mathematics}, 59(6):797--829.
+
 \end{thebibliography}
