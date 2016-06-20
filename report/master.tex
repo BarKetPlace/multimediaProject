@@ -118,7 +118,7 @@
 \tableofcontents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Introduction}
-The following document is the final report of a two months project, carried by two master student in signal processing. The goal of this project was to improve the performance of an Automatic Speech Recognition (ASR) by performing a low level denoising on the features extracted from  a speech signal. These features are known as the Mel-Frequency Cepstral Coefficients (MFCCs) and are computed for every frame of a speech signal. These MFCCs are then used as input to train, and to test a SR system. The kick off idea was that, the MFCCs of a frame can be expressed as a linear combination of MFCCs from some other frames. In this report, we will discuss this assumption and try to build a denoising scheme to improve the performance of the SR system.
+The following document is the final report of a two months project, carried by two master students in signal processing. The goal of this project was to improve the performance of an Automatic Speech Recognition (ASR) by performing a low level denoising on the features extracted from  a speech signal. These features are known as the Mel-Frequency Cepstral Coefficients (MFCCs) and are computed for every frame of a speech signal. These MFCCs are then used as input to train, and to test a SR system. The kick off idea was that, the MFCCs of a frame can be expressed as a linear combination of MFCCs from some other frames. In this report, we will discuss this assumption and try to build a denoising scheme to improve the performance of the SR system.
 \section{Background}
 \subsection{Feature extraction}
 In the case of speech processing, the feature extraction process is not very complicated and is as follow:
@@ -127,6 +127,7 @@ In the case of speech processing, the feature extraction process is not very com
 \includegraphics[scale= .3]{feature_extraction}
 \caption{MFCCs extraction block diagram}
 \label{feature_extraction}
+
 \end{figure}\\
 The scheme introduces non-linearity by taking the log of the triangular overlapping windows output. Hence, we are going to work on the output of these overlapping windows. In the rest of the report, we will denote as $\textbf{e} \in \mathbb{R}^M$ this vector. Here M = 26.
 
@@ -144,6 +145,12 @@ The problem is the following:\\
 we want to find a sparsed vector \textbf{z} such that $||\ey-D\textbf{z}||_2 \leq \epsilon$ and $D\mathbf{z} > 0$. If $\epsilon$ is well chosen, we will have $||\ex - \exhat||_2 \leq ||\ex - \ey||_2$
 
 \subsection{Computation of a codebook D}
+In order to compute a codebook D from which we can extract an estimation of $\ex$, we need all frames of the clean train set of the TIMIT database. We then compute the mel coefficients on
+those frames and store them vertically in a big matrix. The size of this matrix is $26 \times 451048$. This represents approximately 60 MB of data. This is too large and would generate long
+processing time in order to load or search through. To solve this we perform vector quantization on this matrix using a common \textit{k-means} algorithm using $2^{4}$ clusters. The goal here
+is to reduce the number of points in the matrix and only keep $2^{4}$ of them that still describe well the data. The \textit{k-means} algorithm is used with Euclidean distance
+and the \textit{k-means++} algorithm for cluster center initialization \cite{arthur2007k}. The algorithm outputs a $26 \times 2^{4}$ matrix which weighs 4 kB. This will make extracting the
+estimation of the mel coefficients faster since computation using this matrix is fast.
 
 \subsection{Sparse vector}
 The sparsity of a vector can be measured with the $\ell^0$-norm. We could hence formulate the following problem:
@@ -203,6 +210,18 @@ Since this part of the denoising algorithm was not really a part of the project 
 \pagebreak
 \section{Results}
 \subsection{Additivity hypothesis}
+This hypothesis is probably the most needed since we base our denoising operation on it. It states that the additivity of the noise in the time domain still holds in the mel coefficients domain.
+This means that if we compute the MFCC on a noisy speech frame y = x + n, with x the original signal and n the additive noise, we can expect to have mel coefficients in the form $\ey= \ex + \en$.
+To verify this hypothesis we perform the following experiment : for a high number of speech frames ($ > 1000$), we apply some $5$ dB noise. We compute the mel coefficients of the original signal,
+the noised signal and the noise alone. Therefore we have respectively $\ex$, $\ey$ and $\en$. We compute the SNR between the mel coefficients of the noised signal ($\ey$) and the reconstructed
+mel coefficients ($\ex + \en$). We get the following figure :
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=\scale]{additivitycheck}\label{sparsemean}
+\caption{The following histogram shows that for 1219 speech frames, we get on average a SNR of 90 dB between the straight forward computation of $\ey$ and the computation 
+using the additivity assumption. The high SNR shows that on average the signals are very similar. Therefore we conclude that we have validated the additivity assumption.}
+\label{additivitycheck}
+\end{figure}
 
 \subsection{Reducing the dimension}
 The figure \ref{histogram} shows a measure of the sparsity of $\zhat$.
@@ -237,7 +256,7 @@ As figure \ref{kaldiperformances} shows, the denoising algorithm does not improv
 We observe that we do not manage to fit $\ex$ by allowing $||\ey-\exhat||_2$ to become large.
 
 
-\bibliography{bibtex}
+\bibliography{master}
 \end{document}
 %%% Local Variables:
 %%% TeX-master: "master"
