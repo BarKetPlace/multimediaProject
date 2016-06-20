@@ -212,7 +212,16 @@ Since this part of the denoising algorithm was not really a part of the project 
 \subsection{Additivity hypothesis}
 This hypothesis is probably the most needed since we base our denoising operation on it. It states that the additivity of the noise in the time domain still holds in the mel coefficients domain.
 This means that if we compute the MFCC on a noisy speech frame y = x + n, with x the original signal and n the additive noise, we can expect to have mel coefficients in the form $\ey= \ex + \en$.
-To verify this hypothesis 
+To verify this hypothesis we perform the following experiment : for a high number of speech frames ($ > 1000$), we apply some $5$ dB noise. We compute the mel coefficients of the original signal,
+the noised signal and the noise alone. Therefore we have respectively $\ex$, $\ey$ and $\en$. We compute the SNR between the mel coefficients of the noised signal ($\ey$) and the reconstructed
+mel coefficients ($\ex + \en$). We get the following figure :
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=\scale]{additivitycheck}\label{sparsemean}
+\caption{The following histogram shows that for 1219 speech frames, we get on average a SNR of 90 dB between the straight forward computation of $\ey$ and the computation 
+using the additivity assumption. The high SNR shows that on average the signals are very similar. Therefore we conclude that we have validated the additivity assumption.}
+\label{additivitycheck}
+\end{figure}
 
 \subsection{Reducing the dimension}
 The figure \ref{histogram} shows a measure of the sparsity of $\zhat$.
